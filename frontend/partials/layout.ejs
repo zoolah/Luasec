@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><%= title %></title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="icon" href="/logo" type="image/png" />
+
+  <style>
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      background: #050505;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #a1a1aa;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    body::-webkit-scrollbar { width: 6px; background: #050505; }
+    body::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 999px; }
+    body::-webkit-scrollbar-track { background: #050505; }
+    body { scrollbar-width: thin; scrollbar-color: #1a1a1a #050505; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 0;
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.6);
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
+    .btn-primary { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+    .btn-primary:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn-danger { background: rgba(239,68,68,0.08); color: #f87171; }
+    .btn-danger:hover { background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 11px; border-radius: 6px; }
+
+    input, textarea, select {
+      background: rgba(255,255,255,0.02);
+      color: rgba(255,255,255,0.7);
+      border: 0;
+      border-radius: 7px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset; }
+
+    .card, .panel {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 12px;
+    }
+
+    @media (max-width: 640px) {
+      nav .max-w-6xl {
+        max-width: 100%;
+      }
+      main {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+
+      #mobileMenu a {
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+        font-size: 14px;
+      }
+
+      .text-3xl, .text-[28px] {
+        font-size: 24px !important;
+      }
+
+      .btn, button, a[role="button"], input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+
+      body, html {
+        overflow-x: hidden;
+      }
+
+      #toastContainer {
+        right: 12px !important;
+        left: 12px !important;
+      }
+
+      .max-w-6xl, .max-w-screen-2xl {
+        max-width: 100% !important;
+      }
+
+      input, textarea, select {
+        font-size: 16px !important; 
+      }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <nav class="sticky top-0 z-50 w-full border-b border-white/[0.04] bg-[#050505]/80 backdrop-blur-md">
+    <div class="mx-auto max-w-6xl flex items-center justify-between h-14 px-4 sm:px-6">
+      <a href="<%= user && typeof routes !== 'undefined' && routes.dashboard ? routes.dashboard : '/' %>" class="text-[13px] font-semibold tracking-[.2em] text-white/60 uppercase hover:text-white/80 transition">Luasec</a>
+
+      <div class="hidden sm:flex items-center gap-3">
+        <% if (user) { %>
+          <a href="<%= routes && routes.dashboard ? routes.dashboard : '/dashboard' %>" class="text-[12px] text-white/50 hover:text-white/80 transition">Dashboard</a>
+          <div class="flex items-center gap-2 ml-2">
+            <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=32" alt="" class="h-5 w-5 rounded-full opacity-70" />
+            <span class="text-[12px] text-white/50"><%= user.username %></span>
+          </div>
+          <a href="<%= routes.logout %>" class="text-[11px] text-white/25 hover:text-white/50 transition ml-2">Logout</a>
+        <% } else { %>
+          <a href="/auth/login" class="text-[12px] text-white/40 hover:text-white/60 transition">Sign in</a>
+        <% } %>
+      </div>
+
+      <button id="navToggle" aria-expanded="false" aria-controls="mobileMenu" class="sm:hidden p-1.5 text-white/30 hover:text-white/60">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <div id="mobileMenu" class="sm:hidden hidden border-t border-white/[0.04] px-6 py-3">
+      <div class="flex flex-col gap-2">
+        <a href="https://docs.yourdomain.com" class="text-[12px] text-white/30 hover:text-white/50 py-1">Docs</a>
+        <a href="/discord" class="text-[12px] text-white/30 hover:text-white/50 py-1">Discord</a>
+        <% if (user) { %>
+          <a href="<%= routes && routes.dashboard ? routes.dashboard : '/dashboard' %>" class="text-[12px] text-white/30 hover:text-white/50 py-1">Dashboard</a>
+          <a href="<%= routes.logout %>" class="text-[12px] text-white/30 hover:text-white/50 py-1">Logout</a>
+        <% } else { %>
+          <a href="/auth/login" class="text-[12px] text-white/30 hover:text-white/50 py-1">Sign in</a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">
+    <%- body %>
+  </main>
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const menu = document.getElementById('mobileMenu');
+    if (toggle && menu) {
+      toggle.addEventListener('click', () => {
+        const open = menu.classList.toggle('hidden');
+        toggle.setAttribute('aria-expanded', !open);
+      });
+    }
+  </script>
+
+  <script>
+  (function(){
+    var _EK='<%= typeof encKey!=="undefined"&&encKey?encKey:"" %>';
+    if(_EK){
+      var _KB=new Uint8Array(_EK.match(/.{2}/g).map(function(b){return parseInt(b,16)}));
+      var _CK=null;
+      function _gk(){
+        if(_CK)return _CK;
+        _CK=crypto.subtle.importKey('raw',_KB,'AES-GCM',false,['encrypt','decrypt']);
+        return _CK;
+      }
+      function _tb(buf){
+        var s='';for(var i=0;i<buf.length;i++)s+=String.fromCharCode(buf[i]);
+        return btoa(s);
+      }
+      window._enc=async function(obj){
+        var key=await _gk();
+        var iv=crypto.getRandomValues(new Uint8Array(12));
+        var data=new TextEncoder().encode(JSON.stringify(obj));
+        var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,data);
+        var buf=new Uint8Array(iv.length+ct.byteLength);
+        buf.set(iv);buf.set(new Uint8Array(ct),iv.length);
+        return _tb(buf);
+      };
+      window._dec=async function(b64){
+        var key=await _gk();
+        var raw=Uint8Array.from(atob(b64),function(c){return c.charCodeAt(0)});
+        var iv=raw.slice(0,12);var ct=raw.slice(12);
+        var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:iv},key,ct);
+        return JSON.parse(new TextDecoder().decode(plain));
+      };
+      var _OF=window.fetch;
+      window.fetch=async function(url,opts){
+        opts=opts||{};
+        if(opts.method&&opts.method.toUpperCase()==='POST'&&opts.body&&typeof opts.body==='string'){
+          try{
+            var body=JSON.parse(opts.body);
+            var enc=await window._enc(body);
+            opts=Object.assign({},opts);
+            opts.body=JSON.stringify({_enc:enc});
+            opts.headers=Object.assign({},opts.headers||{},{'X-Enc':'1','Content-Type':'application/json'});
+          }catch(e){}
+        }
+        var resp=await _OF.call(window,url,opts);
+        var _oj=resp.json;
+        resp.json=async function(){
+          var d=await _oj.call(resp);
+          if(d&&d._enc)return await window._dec(d._enc);
+          return d;
+        };
+        return resp;
+      };
+      document.addEventListener('submit',async function(e){
+        var form=e.target;
+        if(!form||form.method.toLowerCase()!=='post')return;
+        e.preventDefault();
+        var fd=new FormData(form);
+        var data={};fd.forEach(function(v,k){data[k]=v});
+        try{
+          var enc=await window._enc(data);
+          var r=await _OF.call(window,form.action||window.location.href,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-Enc':'1'},
+            body:JSON.stringify({_enc:enc}),
+            redirect:'follow',
+            credentials:'same-origin'
+          });
+          if(r.redirected){window.location.href=r.url}
+          else if(r.ok){window.location.reload()}
+        }catch(err){
+          HTMLFormElement.prototype.submit.call(form);
+        }
+      },true);
+    }
+  })();
+  </script>
+
+  <script>
+  (function(){
+    var _0x={
+      a:function(){try{return!1}catch(e){return!0}},
+      b:Date.now||function(){return+new Date},
+      c:160,
+      d:!1
+    };
+
+
+    document.addEventListener('keydown',function(e){
+      if(e.keyCode===123){e.preventDefault();return!1}
+    },!0);
+
+
+    var _ch=function(){
+      var t1=_0x.b();
+      debugger;
+      var t2=_0x.b();
+      if(t2-t1>100){
+        if(!_0x.d){
+          _0x.d=!0;
+          console.warn('%c[Luasec] Developer tools detected. Some features may be limited.', 'color:#666');
+        }
+      }
+    };
+    setInterval(_ch,2000);
+
+    var _mt='ontouchstart' in window||navigator.maxTouchPoints>0;
+    var _ws=function(){
+      if(_mt)return;
+      var w=window.outerWidth-window.innerWidth>_0x.c;
+      var h=window.outerHeight-window.innerHeight>_0x.c;
+      if(w||h){
+        if(!_0x.d){
+          _0x.d=!0;
+          document.documentElement.innerHTML='';
+          document.title='';
+          try{window.location.replace('about:blank')}catch(e){}
+        }
+      }
+    };
+    setInterval(_ws,1500);
+
+
+    var _div=document.createElement('div');
+    Object.defineProperty(_div,'id',{get:function(){
+      _0x.d=!0;
+      document.documentElement.innerHTML='';
+      try{window.location.replace('about:blank')}catch(e){}
+    }});
+
+    try{
+      var _blob=new Blob(['setInterval(function(){debugger},50)'],{type:'application/javascript'});
+      var _w=new Worker(URL.createObjectURL(_blob));
+    }catch(e){}
+
+    document.addEventListener('dragstart',function(e){e.preventDefault();return!1},!0);
+
+    document.addEventListener('selectstart',function(e){
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return!0;
+      e.preventDefault();return!1;
+    },!0);
+
+    setInterval(function(){
+      var _r=/./;
+      _r.toString=function(){
+        _0x.d=!0;
+        document.documentElement.innerHTML='';
+        try{window.location.replace('about:blank')}catch(e){}
+        return'';
+      };
+    },3000);
+  })();
+  </script>
+
+</body>
+</html>

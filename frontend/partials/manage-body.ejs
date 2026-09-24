@@ -1,0 +1,2243 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Script Manager — <%= guild.name %>
+  </title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="/logo" type="image/png" />
+  <style>
+    :root {
+      --neutral-grid: #141414;
+    }
+
+    html, body {
+      background: #050505 !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #a1a1aa;
+    }
+    body::-webkit-scrollbar { width: 6px; background: #050505; }
+    body::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 999px; }
+    body::-webkit-scrollbar-track { background: #050505; }
+    body { scrollbar-width: thin; scrollbar-color: #1a1a1a #050505; }
+
+
+    .modal-fade-in {
+      animation: modal-in .18s ease-out both;
+    }
+
+    .modal-fade-out {
+      animation: modal-out .18s ease-in both;
+    }
+
+    @keyframes modal-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(.995);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes modal-out {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(6px) scale(.995);
+      }
+    }
+
+
+    .thin-scroll::-webkit-scrollbar { height: 6px; width: 6px; background: #050505; border-radius: 999px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 999px; min-height: 24px; }
+    .thin-scroll::-webkit-scrollbar-track { background: #050505; border-radius: 999px; }
+    .thin-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.06) #050505; }
+
+
+    .truncate-cell {
+      max-width: 12rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+
+    .toast {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 60;
+    }
+
+
+
+
+
+    aside { background: #080808 !important; border-right: 1px solid rgba(255,255,255,0.04) !important; }
+
+    .tabs-underline {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      padding-bottom: .25rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs-underline::-webkit-scrollbar { display:none; }
+    .tabs-underline .sub-tab-btn {
+      background: transparent !important;
+      border: 0 !important;
+      color: rgba(255,255,255,0.25);
+      padding: .5rem 0;
+      font-weight: 500;
+      font-size: 13px;
+      position: relative;
+      letter-spacing: .1px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tabs-underline .sub-tab-btn:hover { color: rgba(255,255,255,0.5); }
+    .tabs-underline .sub-tab-btn.active { color: rgba(255,255,255,0.8); }
+    .tabs-underline .sub-tab-btn .underline {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      height: 1px;
+      width: 0;
+      background: rgba(255,255,255,0.3);
+      transition: width .18s ease;
+    }
+    .tabs-underline .sub-tab-btn.active .underline { width: 100%; }
+
+    input, textarea, select {
+      background: rgba(255,255,255,0.02) !important;
+      color: rgba(255,255,255,0.7) !important;
+      border: 0 !important;
+      border-radius: 7px !important;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset !important;
+    }
+    input[type="range"] {
+      box-shadow: none !important;
+      accent-color: rgba(255,255,255,0.4);
+    }
+    input:focus, textarea:focus, select:focus { outline: none !important; box-shadow: 0 0 0 1px rgba(255,255,255,0.15) !important; }
+    button {
+      background: rgba(255,255,255,0.03) !important;
+      color: rgba(255,255,255,0.6) !important;
+      border: 0 !important;
+      border-radius: 8px !important;
+      box-shadow: none !important;
+      transition: background 0.2s, color 0.2s;
+    }
+    button:hover, button:focus { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.9) !important; }
+
+    .settings-list {
+      background: transparent !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      list-style: none;
+    }
+    .settings-list > li { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .settings-list > li:last-child { border-bottom: 0; }
+
+  .ls-table-wrapper { position:relative; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); overflow:hidden; }
+  .ls-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+  .ls-table thead th { font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:.9px; color:rgba(255,255,255,0.25); padding:10px 14px; background:rgba(255,255,255,0.015); position:sticky; top:0; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); text-align:left; }
+  .ls-table thead th:first-child { padding-left:18px; }
+  .ls-table tbody td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); color:rgba(255,255,255,0.55); }
+  .ls-table tbody tr:last-child td { border-bottom:0; }
+  .ls-table tbody tr { transition: background .18s ease; }
+  .ls-table tbody tr:hover { background:rgba(255,255,255,0.025); }
+  .ls-table tbody tr:active { background:rgba(255,255,255,0.04); }
+  .ls-table .muted { color:rgba(255,255,255,0.2); font-size:11px; }
+  .ls-table-gradient-bar { display:none; }
+  .ls-table-wrapper::-webkit-scrollbar { height:10px; width:10px; }
+  .ls-table-wrapper::-webkit-scrollbar-track { background:#050505; }
+  .ls-table-wrapper::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.06); border-radius:40px; border:2px solid #050505; }
+  .ls-table tbody td:first-child { padding-left:18px; }
+  .ls-table code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Liberation Mono", monospace; font-size:12px; }
+  .ls-table-stats { font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:rgba(255,255,255,0.2); padding:6px 16px 4px; }
+  .ls-badge { display:inline-block; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.6); font-size:10px; padding:2px 6px; border-radius:6px; font-weight:600; letter-spacing:.5px; }
+  .ls-table-empty { text-align:center; padding:2.75rem 1rem; font-size:13px; color:rgba(255,255,255,0.2); }
+
+  .scroll-table-container { max-height:36rem; overflow-y:auto; }
+
+
+  .chart-wrapper { position:relative; width:100%; min-height:420px; }
+  .exec-chart-canvas { width:100% !important; height:420px !important; }
+  .chart-toggle-group { position:relative; display:inline-flex; background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.04); border-radius:10px; padding:3px; gap:3px; overflow:hidden; }
+  .chart-toggle-group .toggle-btn { background:transparent !important; border:0 !important; color:rgba(255,255,255,0.2); font-weight:500; font-size:11px; padding:6px 14px; border-radius:8px; letter-spacing:.5px; cursor:pointer; transition:color .25s; position:relative; z-index:1; }
+  .chart-toggle-group .toggle-btn:hover { color:rgba(255,255,255,0.7); }
+  .chart-toggle-group .toggle-btn.active { color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.06) !important; }
+  .chart-toggle-group .toggle-btn:active { transform:none; }
+  @media(max-width:720px){ .exec-chart-canvas { height:340px !important; } .chart-wrapper { min-height:340px; } }
+
+    .script-avatar { width:30px; height:30px; border-radius:8px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:11px; letter-spacing:.5px; color:rgba(255,255,255,0.3); text-transform:uppercase; flex-shrink:0; }
+
+    .script-sidebar {
+      width: 220px;
+      position: relative;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .script-sidebar .tab-btn { padding:.5rem .75rem; border-radius:8px; color:rgba(255,255,255,0.35); background:transparent !important; border:0 !important; font-weight:500; position:relative; font-size:13px; }
+    .script-sidebar .tab-btn:hover:not(.active) { background:rgba(255,255,255,0.03) !important; color:rgba(255,255,255,0.6); }
+    .script-sidebar .tab-btn.active { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.04) !important; }
+    .script-sidebar .tab-btn.active::before { content:''; position:absolute; left:3px; top:14%; bottom:14%; width:2px; border-radius:2px; background:rgba(255,255,255,0.15); }
+    .script-sidebar .brand-row { padding:0 .75rem .75rem .75rem; }
+    .script-sidebar .brand-row .new-btn { transition:background .2s; }
+    @media (max-width: 980px) {
+      .script-sidebar { width:180px; }
+    }
+    @media (max-width: 640px) {
+      .script-sidebar { width:100%; border-right:0; border-bottom: 1px solid rgba(255,255,255,0.04); flex-direction:row; padding:0.75rem; overflow-x:auto; }
+      .script-sidebar .brand-row { margin-bottom:0; padding:0 0.5rem 0 0; flex-shrink:0; }
+      .script-sidebar #tabs { flex-direction:row; gap:4px; overflow-x:auto; overflow-y:hidden; }
+      .script-sidebar .tab-btn { white-space:nowrap; padding:.4rem .65rem; font-size:12px; }
+      .script-sidebar .tab-btn.active::before { display:none; }
+    }
+
+    .lua-editor {
+      position: relative;
+      width: 100%;
+      min-height: 620px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      background: #0a0a0a;
+      overflow: hidden;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .lua-editor pre,
+    .lua-editor textarea {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      margin: 0;
+      padding: 18px 20px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Liberation Mono", monospace;
+      font-size: 13.5px;
+      line-height: 1.55;
+      white-space: pre;
+      word-wrap: normal;
+      overflow: auto;
+    }
+    .lua-editor pre {
+      pointer-events: none;
+      z-index: 1;
+      color: #d4d4d4;
+      background: transparent;
+    }
+    .lua-editor textarea {
+      z-index: 2;
+      color: transparent;
+      caret-color: #e0e0e0;
+      background: transparent;
+      resize: none;
+      outline: none;
+      border: 0;
+    }
+    .lua-editor textarea:focus {
+      box-shadow: none;
+    }
+
+    .lua-keyword { color: #c586c0; }
+    .lua-builtin { color: #dcdcaa; }
+    .lua-string  { color: #ce9178; }
+    .lua-number  { color: #b5cea8; }
+    .lua-comment { color: #6a9955; font-style: italic; }
+    .lua-func    { color: #569cd6; }
+    .lua-op      { color: #d4d4d4; }
+    .lua-field   { color: #9cdcfe; }
+    .lua-bool    { color: #569cd6; }
+
+    @media (max-width: 640px) {
+      .script-sidebar { display: none !important; }
+      .mobile-script-selector { display: block !important; }
+
+      .mx-auto.max-w-\[1800px\] {
+        max-width: 100% !important;
+        padding: 6px 8px !important;
+      }
+
+      .rounded-3xl.border.border-white\/\[0\.05\] {
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      .flex-1.min-w-0.p-6.sm\:p-10 {
+        padding: 0 !important;
+      }
+
+      .sub-tab-btn[data-subtab="Executions"],
+      .sub-tab-btn[data-subtab="editor"],
+      .sub-tab-btn[data-subtab="configtable"],
+      .sub-tab-content[data-subtab-panel="Executions"],
+      .sub-tab-content[data-subtab-panel="editor"],
+      .sub-tab-content[data-subtab-panel="configtable"] {
+        display: none !important;
+      }
+
+      #subTabs.tabs-underline {
+        gap: 2px !important;
+        margin: 0 0 8px !important;
+        padding: 3px !important;
+        background: #111;
+        border-radius: 4px;
+        border: none !important;
+      }
+      .sub-tab-btn {
+        flex: 1;
+        font-size: 13px !important;
+        padding: 7px 4px !important;
+        min-height: 38px;
+        color: #888 !important;
+        border-radius: 3px;
+      }
+      .sub-tab-btn.active {
+        background: #222 !important;
+        color: #fff !important;
+      }
+      .sub-tab-btn .underline { display: none !important; }
+
+      .sub-tab-content {
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+      }
+
+      .ls-table-wrapper { background: transparent !important; border: none !important; }
+      .ls-table { width: 100% !important; min-width: 0 !important; }
+      .ls-table thead { display: none !important; }
+      .ls-table tr {
+        display: block !important;
+        background: #111 !important;
+        border: 1px solid #222 !important;
+        border-radius: 3px !important;
+        padding: 6px 8px !important;
+        margin-bottom: 5px !important;
+      }
+      .ls-table td {
+        display: block !important;
+        padding: 1px 0 !important;
+        font-size: 14px !important;
+        border: none !important;
+      }
+      .ls-table td::before {
+        content: attr(data-label) ": ";
+        font-size: 10px;
+        color: #666;
+      }
+
+      #live-panel- .ls-table-wrapper { max-height: 160px !important; }
+      #live-panel- .rounded-lg.border { background: #111 !important; border-color: #222 !important; padding: 6px !important; }
+      #live-panel- textarea { min-height: 70px !important; font-size: 13px !important; }
+      #live-panel- .flex.flex-wrap.gap-2 > button { min-height: 34px; font-size: 11px; }
+
+      .mb-4, .mb-5, .mb-6, .mb-8 { margin-bottom: 3px !important; }
+      h4, .text-sm.font-medium { font-size: 12px !important; margin-bottom: 1px !important; }
+      .border, .shadow-inner, .rounded-3xl { border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+      button { min-height: 34px; }
+    }
+
+    @media (max-width: 480px) {
+      .sub-tab-btn { font-size: 12px !important; padding: 6px 2px !important; }
+    }
+  </style>
+
+  <%
+  function encodeIds(serverIdStr, scriptIdHexStr) {
+    const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    if(!/^[0-9a-fA-F]+$/.test(scriptIdHexStr)) return 'invalid';
+    try {
+      const base = BigInt(alphabet.length);
+      const serverId = BigInt(serverIdStr);
+      const scriptId = BigInt('0x' + scriptIdHexStr);
+      const combined = (serverId << 32n) | scriptId;
+      if (combined === 0n) return alphabet[0];
+      let out = '', t = combined;
+      while (t > 0n) { out = alphabet[Number(t % base)] + out; t /= base; }
+      return out;
+    } catch (e) {
+      return 'invalid';
+    }
+  }
+  %>
+</head>
+
+<body class="antialiased">
+
+
+  <div class="mx-auto max-w-[1800px] px-6 sm:px-8 py-6 sm:py-8" style="max-width: 1800px;">
+    <div class="mb-3 flex items-center justify-between md:mb-6">
+      <a href="<%= typeof routes !== 'undefined' && routes.dashboard ? routes.dashboard : '/dashboard' %>" class="text-sm text-white/50 hover:text-white/80 transition">← Back</a>
+      <div class="text-right">
+        <div class="text-lg md:text-xl font-medium text-white/90"><%= guild.name %></div>
+      </div>
+    </div>
+
+    <div class="mobile-script-selector hidden mb-3">
+      <select id="mobileScriptSelect" class="w-full bg-[#111] border border-white/[0.06] text-white rounded-md px-3 py-2 text-sm">
+        <% scripts.forEach((script, i) => { %>
+          <option value="script-<%= script.scriptId %>" <%= i === 0 ? 'selected' : '' %>><%= script.name %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden flex flex-col sm:flex-row min-h-[82vh] shadow-inner">
+
+      <aside class="script-sidebar bg-black/30 border-r border-white/[0.06] py-6 px-4 flex flex-col" id="scriptSidebar">
+        <div class="brand-row flex items-center justify-between mb-4 px-1">
+          <span class="text-[11px] font-semibold tracking-[1.5px] text-white/40">SCRIPTS</span>
+          <button onclick="toggleModal('newScriptModal')" class="px-2.5 py-1.5 text-xs rounded-lg bg-white/[0.08] border border-white/[0.08] text-white/80 hover:bg-white/[0.12] transition flex items-center justify-center" title="New Script">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+        <div id="tabs" class="flex flex-col gap-0.5 flex-1 thin-scroll" style="overflow-y:auto; overflow-x:hidden;">
+          <% scripts.forEach((script, i)=> { %>
+            <% const rawName = (script.name || '').trim();
+               const parts = rawName.split(/\s+/).filter(Boolean);
+               let initials = parts.slice(0,2).map(p => p[0]).join('');
+               if(!initials) initials = 'S';
+               initials = initials.replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase();
+            %>
+            <button data-tab="script-<%= script.scriptId %>" class="tab-btn group w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all <%= i === 0 ? 'active bg-white/[0.06] text-white' : 'text-white/60 hover:bg-white/[0.025] hover:text-white/90' %>" title="<%= script.name %>">
+              <% if (script.logo) { %>
+                <img src="<%= script.logo %>" class="script-avatar flex-shrink-0 object-contain border border-white/[0.06]" style="background:#111;" />
+              <% } else { %>
+                <span class="script-avatar flex-shrink-0 group-hover:bg-white/[0.08] transition-colors"><%= initials %></span>
+              <% } %>
+              <span class="truncate text-[13.5px] tracking-[-0.1px]"><%= script.name %></span>
+            </button>
+          <% }) %>
+        </div>
+      </aside>
+
+      <div class="flex-1 min-w-0 p-6 sm:p-10 space-y-6">
+
+          <div id="subTabs" class="tabs-underline mb-6">
+            <button type="button" class="sub-tab-btn active" data-subtab="Executions">Executions<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="editor">Editor<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="keys">Keys<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="users">Users<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="configtable">Config<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="settings">Settings<span class="underline"></span></button>
+            <button type="button" class="sub-tab-btn" data-subtab="live">Live View<span class="underline"></span></button>
+          </div>
+
+          <% scripts.forEach((script, i)=> { %>
+
+            <section id="script-<%= script.scriptId %>"
+              class="tab-content <%= i !== 0 ? 'hidden' : '' %> space-y-4">
+              <div class="sub-tab-content <%= i !== 0 ? 'hidden' : '' %> rounded-3xl border border-white/[0.05] bg-white/[0.008] p-8" data-subtab-panel="Executions">
+                <div class="flex flex-col w-full">
+                  <div class="flex items-center justify-between mb-5 flex-wrap gap-4">
+                    <h4 class="text-sm font-medium text-white/80">Executions</h4>
+                    <div class="chart-toggle-group" data-chart-toggle-group="<%= script.scriptId %>">
+                      <button type="button" class="toggle-btn active" data-range="week" data-script="<%= script.scriptId %>">Last 7 Days</button>
+                      <button type="button" class="toggle-btn" data-range="month" data-script="<%= script.scriptId %>">Last 30 Days</button>
+                      <button type="button" class="toggle-btn" data-range="day" data-script="<%= script.scriptId %>">Last 24 Hrs</button>
+                    </div>
+                  </div>
+                  <div class="chart-wrapper">
+                    <canvas id="execChart-<%= script.scriptId %>" class="exec-chart-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
+
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="editor">
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="flex items-center gap-3">
+                        <% if (script.logo) { %>
+                          <img src="<%= script.logo %>" class="h-6 w-6 rounded object-contain border border-white/[0.08]" />
+                        <% } %>
+                        <h4 class="text-sm font-medium text-white/80"><%= script.name %></h4>
+                      </div>
+                      <div class="flex gap-2">
+                        <button type="button"
+                          data-action="q6x"
+                          data-script-id="<%= script.scriptId %>"
+                          data-script-name="<%= script.name %>"
+                          class="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20 transition">
+                          Delete Script
+                        </button>
+                      </div>
+                    </div>
+                    <div class="flex flex-col flex-1 mb-2">
+                      <div class="lua-editor" id="editor-wrapper-<%= script.scriptId %>">
+                        <pre id="editor-highlight-<%= script.scriptId %>"><code></code></pre>
+                        <textarea id="scriptEditorTextarea-<%= script.scriptId %>"
+                          class="w-full"
+                          style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;" autocomplete="off" spellcheck="false"><%= script.luaContent %></textarea>
+                      </div>
+                      <div class="mt-2 flex items-center gap-3">
+                        <span class="inline-block px-2 py-1 rounded-md bg-white/[0.04] text-gray-500 text-[10px] font-mono">Auto-save</span>
+                        <span id="scriptEditorStatus-<%= script.scriptId %>" class="text-[10px] text-gray-500 flex items-center gap-2"></span>
+                      </div>
+                    </div>
+                  </div>
+                  <script src="https://unpkg.com/luaparse@0.3.1/luaparse.js"></script>
+
+                  <script>
+                    function checkLuaSyntax(code) {
+                      try {
+                        luaparse.parse(code);
+                        return { valid: true };
+                      } catch (err) {
+                        return { valid: false, error: err.message };
+                      }
+                    }
+
+                    function autoSaveScriptContent(scriptId) {
+                      const textarea = document.getElementById(`scriptEditorTextarea-${scriptId}`);
+                      const status = document.getElementById(`scriptEditorStatus-${scriptId}`);
+                      const toggle = document.getElementById(`syntaxToggle-${scriptId}`);
+                      const storageKey = `syntaxCheck:<%= guild.id %>:${scriptId}`;
+                      try {
+                        const saved = localStorage.getItem(storageKey);
+                        if (toggle && (saved === 'off' || saved === 'false')) {
+                          toggle.checked = false;
+                        }
+                      } catch {}
+                      if (toggle) {
+                        toggle.addEventListener('change', () => {
+                          try { localStorage.setItem(storageKey, toggle.checked ? 'on' : 'off'); } catch {}
+                          status.textContent = toggle.checked ? 'Syntax check ON' : 'Syntax check OFF';
+                          setTimeout(() => { if (!status.textContent.includes('Saving')) status.textContent = ''; }, 1200);
+                        });
+                      }
+                      let timeout = null;
+                      textarea.addEventListener('input', function () {
+                        if (timeout) clearTimeout(timeout);
+                        status.innerHTML = `<svg class=\"animate-spin h-4 w-4 inline-block\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\" fill=\"none\"></circle></svg> Saving...`;
+                        timeout = setTimeout(() => {
+                          fetch('/q2x', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              a: '<%= guild.id %>',
+                              b: scriptId,
+                              d: textarea.value
+                            })
+                          })
+                            .then(res => res.ok ? res.json() : Promise.reject(res))
+                            .then(data => {
+                              status.textContent = 'Saved!';
+                              setTimeout(() => { if (status.textContent === 'Saved!') status.textContent = ''; }, 1800);
+                            })
+                            .catch((e) => {
+                              console.log(e);
+                              status.textContent = 'Error saving.';
+                              setTimeout(() => { status.textContent = ''; }, 3000);
+                            });
+                        }, 800);
+                      });
+                    }
+                    document.addEventListener('DOMContentLoaded', function() {
+                      if (window.__scriptsMeta && Array.isArray(window.__scriptsMeta)) {
+                        window.__scriptsMeta.forEach(s => autoSaveScriptContent(s.scriptId));
+                      }
+                    });
+                  </script>
+                  <script>
+                    function autoSaveConfigTable(scriptId) {
+                      const textarea = document.getElementById(`configTableTextarea-${scriptId}`);
+                      const status = document.getElementById(`configTableStatus-${scriptId}`);
+                      if (!textarea || !status) return;
+                      let timeout = null;
+                      textarea.addEventListener('input', function () {
+                        if (timeout) clearTimeout(timeout);
+                        status.innerHTML = `<svg class="animate-spin h-4 w-4 inline-block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle></svg> Saving...`;
+                        timeout = setTimeout(() => {
+                          fetch('/q8x', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              a: '<%= guild.id %>',
+                              b: scriptId,
+                              o: textarea.value
+                            })
+                          })
+                            .then(res => res.ok ? res.json() : Promise.reject(res))
+                            .then(() => {
+                              status.textContent = 'Saved!';
+                              setTimeout(() => { if (status.textContent === 'Saved!') status.textContent = ''; }, 1800);
+                            })
+                            .catch((e) => {
+                              console.log(e);
+                              status.textContent = 'Error saving.';
+                              setTimeout(() => { status.textContent = ''; }, 3000);
+                            });
+                        }, 800);
+                      });
+                    }
+                    document.addEventListener('DOMContentLoaded', function() {
+                      if (window.__scriptsMeta && Array.isArray(window.__scriptsMeta)) {
+                        window.__scriptsMeta.forEach(s => autoSaveConfigTable(s.scriptId));
+                      }
+                    });
+                  </script>
+                  <script>
+                      function confirmDeleteScript(scriptId, scriptName) {
+                        if (!window.confirm(`Are you sure you want to delete script "${scriptName}"? This cannot be undone.`)) return;
+                        if (!window.confirm(`Final confirmation: Delete script "${scriptName}" and all its data?`)) return;
+                        fetch('/q6x', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            a: '<%= guild.id %>',
+                            b: scriptId
+                          })
+                        })
+                          .then(res => res.ok ? res.json() : Promise.reject(res))
+                          .then(data => {
+                            showToast('Script deleted.', { duration: 3500 });
+                            setTimeout(() => { window.location.reload(); }, 1200);
+                          })
+                          .catch((e) => {
+                            showToast('Error deleting script.', { duration: 3500 });
+                            console.log(e);
+                          });
+                      }
+                    function submitWhitelist(scriptId) {
+                      const modal = document.getElementById('addWhitelistModal-' + scriptId);
+                      const form = document.getElementById('addWhitelistForm-' + scriptId);
+                      const userId = form.g.value;
+                      const duration = form.h.value;
+                      fetch('/q4x', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ b: scriptId, g: userId, h: duration })
+                      })
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.success) {
+                            showToast('User whitelisted!', { duration: 3500 });
+                            modal.classList.add('hidden');
+                            setTimeout(() => { window.location.reload(); }, 1200);
+                          } else {
+                            showToast(data.error || 'Error whitelisting user.', { duration: 3500 });
+                          }
+                        })
+                        .catch(() => {
+                          showToast('Error whitelisting user.', { duration: 3500 });
+                        });
+                    }
+                  </script>
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="keys">
+                    <div class="flex items-center justify-between mb-2">
+                      <button onclick="toggleModal('addKeysModal-<%= script.scriptId %>')" class="text-sm text-white/70 hover:text-white">+ Add Keys</button>
+                    </div>
+
+                    <div id="addKeysModal-<%= script.scriptId %>"
+                      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+                      <div
+                        class="max-w-lg w-full rounded-xl bg-[#0a0a0a] border border-white/[0.06] p-6 modal-fade-in relative">
+                        <button aria-label="Close" onclick="toggleModal('addKeysModal-<%= script.scriptId %>')"
+                          class="absolute top-4 right-4 p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-gray-400 hover:text-white transition">
+                          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+
+                        <form action="/q3x" method="POST"
+                          onsubmit="toggleModal('addKeysModal-<%= script.scriptId %>')">
+                          <input type="hidden" name="a" value="<%= guild.id %>">
+                          <input type="hidden" name="b" value="<%= script.scriptId %>">
+
+                          <div class="mb-6">
+                            <label class="block text-xs font-medium text-gray-400 mb-2">Lifetime</label>
+                            <div class="flex items-center gap-4">
+                              <input type="range" name="e" min="0" max="90" value="0" required
+                                class="flex-1"
+                                oninput="this.nextElementSibling.textContent = this.value == 0 ? 'Infinite' : this.value + ' days'">
+                              <output
+                                class="w-20 text-center text-[10px] font-mono text-gray-400 bg-white/[0.04] rounded-md px-2 py-1">Infinite</output>
+                            </div>
+                            <p class="text-[10px] text-gray-600 mt-2">0 = infinite, 1–90 days</p>
+                          </div>
+
+                          <div class="mb-8">
+                            <label class="block text-xs font-medium text-gray-400 mb-2">Number of Keys</label>
+                            <div class="flex items-center gap-4">
+                              <input type="range" name="f" min="1" max="50" value="1" required
+                                class="flex-1"
+                                oninput="this.nextElementSibling.textContent = this.value">
+                              <output
+                                class="w-14 text-center text-[10px] font-mono text-gray-400 bg-white/[0.04] rounded-md px-2 py-1">1</output>
+                            </div>
+                          </div>
+
+                          <div class="flex justify-end gap-3">
+                            <button type="button" onclick="toggleModal('addKeysModal-<%= script.scriptId %>')"
+                              class="px-4 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/60 text-xs font-medium hover:bg-white/[0.1] transition">Cancel</button>
+                            <button type="submit"
+                              class="px-4 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.08] text-white/80 text-xs font-medium hover:bg-white/[0.12] transition">Add</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+
+                    <div class="scroll-table-container ls-table-wrapper overflow-auto max-h-[36rem] thin-scroll">
+                      <div class="ls-table-gradient-bar"></div>
+                      <table class="ls-table">
+                        <thead>
+                          <tr>
+                            <th>Key</th>
+                            <th>Lifetime</th>
+                            <th>Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% if (script.keys.length === 0) { %>
+                            <tr><td colspan="3" class="ls-table-empty">
+                              No keys yet. Use the button above to generate some.
+                            </td></tr>
+                          <% } else { %>
+                          <% script.keys.forEach(k=> { %>
+                            <tr>
+                              <td data-label="Key" class="break-all font-mono text-white/60"><%= k.key %></td>
+                              <td data-label="Lifetime"><%= k.lifetime===0 ? 'Infinite' : k.lifetime + ' days' %></td>
+                              <td data-label="Created"><%= new Date(k.createdAt).toLocaleDateString() %></td>
+                            </tr>
+                          <% }) %>
+                          <% } %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="users">
+                    <div class="flex items-center justify-between mb-2">
+                      <button onclick="toggleModal('addWhitelistModal-<%= script.scriptId %>')" class="text-sm text-white/70 hover:text-white">+ Add User</button>
+                      <div id="addWhitelistModal-<%= script.scriptId %>"
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+                        <div
+                          class="max-w-lg w-full rounded-xl bg-[#0a0a0a] border border-white/[0.06] p-6 modal-fade-in relative">
+                          <h4 class="text-sm font-semibold text-white/90 mb-4">Whitelist User</h4>
+                          <button aria-label="Close" onclick="toggleModal('addWhitelistModal-<%= script.scriptId %>')"
+                            class="absolute top-4 right-4 p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-gray-400 hover:text-white transition">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+
+                          <form id="addWhitelistForm-<%= script.scriptId %>"
+                            onsubmit="event.preventDefault(); submitWhitelist('<%= script.scriptId %>');">
+                            <input type="hidden" name="b" value="<%= script.scriptId %>">
+                            <label class="block text-xs font-medium text-gray-400 mb-2">User ID</label>
+                            <input name="g" type="text" required placeholder="Discord User ID"
+                              class="w-full bg-white/[0.02] px-3 py-2 rounded-lg border border-white/[0.06] text-sm focus:outline-none focus:ring-1 focus:ring-white/[0.12] mb-4">
+                            <label class="block text-xs font-medium text-gray-400 mb-2">Key Duration (days)</label>
+                            <input name="h" type="range" min="1" max="365" value="30"
+                              oninput="this.nextElementSibling.textContent = this.value"
+                              class="w-full mb-2">
+                            <output
+                              class="w-14 text-center text-[10px] font-mono text-gray-400 bg-white/[0.04] rounded-md px-2 py-1">30</output>
+                            <div class="flex justify-end mt-6 gap-3">
+                              <button type="button" onclick="toggleModal('addWhitelistModal-<%= script.scriptId %>')"
+                                class="px-4 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/60 text-xs font-medium hover:bg-white/[0.1] transition">Cancel</button>
+                              <button type="submit"
+                                class="px-4 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.08] text-white/80 text-xs font-medium hover:bg-white/[0.12] transition">Add</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="scroll-table-container ls-table-wrapper overflow-auto max-h-[36rem] thin-scroll">
+                      <div class="ls-table-gradient-bar"></div>
+                      <table class="ls-table">
+                        <thead>
+                          <tr>
+                            <th>Key</th>
+                            <th>User</th>
+                            <th>Usage</th>
+                            <th>Lifetime</th>
+                            <th>Expiration</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% if (script.users.length === 0) { %>
+                            <tr><td colspan="5" class="ls-table-empty">
+                              No users yet. Use the "Add User" button above to whitelist people.
+                            </td></tr>
+                          <% } else { %>
+                          <% script.users.forEach(user=> { %>
+                            <tr class="cursor-pointer" onclick="showUserModal('<%= script.scriptId %>', '<%= user.key %>')">
+                              <td data-label="Key" class="break-all font-mono text-white/60" title="Click to view full info">
+                                <%= user.key.length> 16 ? user.key.slice(0, 16) + '…' : user.key %>
+                              </td>
+                              <td data-label="User" title="Click to view full info">
+                                <%= user.username.length> 18 ? user.username.slice(0, 18) + '…' : user.username %>
+                              </td>
+                              <td data-label="Usage"><span class="ls-badge"><%= user.usageCount %></span></td>
+                              <td data-label="Lifetime"><%= user.lifetime || '—' %></td>
+                              <td data-label="Expiration"><%= user.unix_expiration || '—' %></td>
+                            </tr>
+                          <% }) %>
+                          <% } %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="settings">
+                    <div class="mb-2">
+                      <span class="text-sm text-white/70">Settings</span>
+                    </div>
+                    <form id="updateScriptSettingsForm-<%= script.scriptId %>" class="space-y-4"
+                      onsubmit="event.preventDefault(); updateSettings('<%= script.scriptId %>');">
+                      <input type="hidden" name="a" value="<%= guild.id %>">
+                      <input type="hidden" name="b" value="<%= script.scriptId %>">
+
+                      <ul class="settings-list">
+                        <li class="py-3 flex items-center justify-between gap-4">
+                          <div class="flex flex-col">
+                            <label for="dmOnExec-<%= script.scriptId %>"
+                              class="text-xs font-medium text-white/80 mb-1">DM User on Execution</label>
+                            <span class="text-[10px] text-gray-600">User receives a DM log on script execution.</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <input type="hidden" name="n" value="false">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                              <input id="dmOnExec-<%= script.scriptId %>" name="n" type="checkbox" value="true"
+                                <%=script.dmOnExec ? 'checked' : '' %> class="sr-only peer">
+                              <div
+                                class="w-9 h-5 bg-white/[0.06] rounded-full peer peer-checked:bg-white/[0.25] transition-all">
+                              </div>
+                              <div
+                                class="absolute left-0.5 top-0.5 bg-white/60 peer-checked:bg-white w-4 h-4 rounded-full transition-all peer-checked:translate-x-4">
+                              </div>
+                            </label>
+                          </div>
+                        </li>
+                        <li class="py-3 flex items-center justify-between gap-4">
+                          <div class="flex flex-col">
+                            <label for="freemiumScript-<%= script.scriptId %>"
+                              class="text-xs font-medium text-white/80 mb-1">Freemium Script Option</label>
+                            <span class="text-[10px] text-gray-600">Users can get a free temp key through an ad link.</span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <input type="hidden" name="m" value="false">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                              <input id="freemiumScript-<%= script.scriptId %>" name="m" type="checkbox"
+                                value="true" <%=script.freemium ? 'checked' : '' %> class="sr-only peer">
+                              <div
+                                class="w-9 h-5 bg-white/[0.06] rounded-full peer peer-checked:bg-white/[0.25] transition-all">
+                              </div>
+                              <div
+                                class="absolute left-0.5 top-0.5 bg-white/60 peer-checked:bg-white w-4 h-4 rounded-full transition-all peer-checked:translate-x-4">
+                              </div>
+                            </label>
+                          </div>
+                        </li>
+                        <li class="py-3 flex items-center justify-between gap-4">
+
+                          <div class="flex flex-col w-full">
+                            <label for="script_hwid_reset_timeout_in_hours-<%= script.scriptId %>"
+                              class="text-xs font-medium text-white/80 mb-1">HWID Reset Timeout <span
+                                class="ml-1 text-[10px] text-gray-600">(hours)</span></label>
+                            <span class="text-[10px] text-gray-600 mb-2">How long users must wait before resetting their HWID.</span>
+                            <div class="flex items-center gap-2 w-full">
+                              <input id="script_hwid_reset_timeout_in_hours-<%= script.scriptId %>"
+                                name="l" type="range" min="1" max="168"
+                                value="<%= script.hwid_reset_timeout_in_hours %>"
+                                oninput="this.nextElementSibling.textContent = this.value"
+                                class="flex-1">
+                              <output
+                                class="w-14 text-center text-[10px] font-mono text-gray-400 bg-white/[0.04] rounded-md px-2 py-1">
+                                <%= script.hwid_reset_timeout_in_hours %>
+                              </output>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="py-3 flex flex-col gap-2">
+                          <label for="execWebhook-<%= script.scriptId %>"
+                            class="text-xs font-medium text-white/80 mb-1">Execution Log Webhook</label>
+                          <span class="text-[10px] text-gray-600 mb-1">Forward execution logs to a Discord webhook.</span>
+                          <input id="execWebhook-<%= script.scriptId %>" name="j" type="url"
+                            value="<%= script.execution_log_webhook || '' %>"
+                            placeholder="https://discord.com/api/webhooks/..."
+                            class="w-full px-3 py-2 rounded-md text-sm">
+                        </li>
+                        <li class="py-3 flex flex-col gap-2">
+                          <label for="crackWebhook-<%= script.scriptId %>"
+                            class="text-xs font-medium text-white/80 mb-1">Crack-Detection Webhook</label>
+                          <span class="text-[10px] text-gray-600 mb-1">Notify about suspicious activity.</span>
+                          <input id="crackWebhook-<%= script.scriptId %>" name="k" type="url"
+                            value="<%= script.crack_detection_webhook || '' %>"
+                            placeholder="https://discord.com/api/webhooks/..."
+                            class="w-full px-3 py-2 rounded-md text-sm">
+                        </li>
+
+                        <li class="py-3 flex flex-col gap-2 border-t border-white/[0.04] pt-4 mt-1">
+                          <label class="text-xs font-medium text-white/80 mb-1">Script Name</label>
+                          <input name="c" type="text" value="<%= script.name %>" placeholder="Script name"
+                            class="w-full px-3 py-2 rounded-md text-sm">
+                          <span class="text-[10px] text-gray-600">Renaming updates across the dashboard and panels.</span>
+                        </li>
+
+                        <li class="py-3 flex flex-col gap-2">
+                          <label class="text-xs font-medium text-white/80 mb-1">Logo</label>
+                          <div class="flex items-center gap-3">
+                            <div id="logoPreview-<%= script.scriptId %>" class="h-9 w-9 rounded-md overflow-hidden border border-white/[0.08] bg-white/[0.02] flex-shrink-0">
+                              <% if (script.logo) { %>
+                                <img src="<%= script.logo %>" alt="" class="h-full w-full object-contain" />
+                              <% } else { %>
+                                <div class="h-full w-full flex items-center justify-center text-[9px] text-white/25">—</div>
+                              <% } %>
+                            </div>
+                            <div class="flex items-center gap-2">
+                              <input type="file" id="logoFile-<%= script.scriptId %>" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="previewAndStageLogo('<%= script.scriptId %>', this)">
+                              <button type="button" onclick="document.getElementById('logoFile-<%= script.scriptId %>').click()" class="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/70 hover:bg-white/[0.1] transition">Choose image</button>
+                              <button type="button" onclick="uploadStagedLogo('<%= script.scriptId %>', '<%= guild.id %>')" class="px-3 py-1.5 text-xs rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/70 hover:bg-white/[0.1] transition">Upload</button>
+                              <% if (script.logo) { %>
+                                <button type="button" onclick="removeScriptLogo('<%= script.scriptId %>', '<%= guild.id %>')" class="px-3 py-1.5 text-xs rounded-lg bg-red-500/10 border border-red-500/10 text-red-400/80 hover:bg-red-500/15 transition">Remove</button>
+                              <% } %>
+                            </div>
+                          </div>
+                          <span class="text-[10px] text-gray-600">Small PNG/JPG. Shown in script management UI.</span>
+                          <div id="logoStatus-<%= script.scriptId %>" class="text-[10px] text-emerald-400/70 h-3 mt-0.5"></div>
+                        </li>
+                      </ul>
+
+                      <div id="errorHolder-<%= script.scriptId %>" class="hidden text-red-500 mt-2"></div>
+                      <div class="flex justify-end mt-2">
+                        <span id="scriptSettingsStatus-<%= script.scriptId %>"
+                          class="text-xs text-gray-400 flex items-center gap-2"></span>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="configtable">
+                    <div class="mb-5">
+                      <h4 class="text-sm font-medium text-white/80">Config Table</h4>
+                    </div>
+                    <div class="flex flex-col flex-1 mb-2">
+                      <div class="lua-editor" id="config-wrapper-<%= script.scriptId %>">
+                        <pre id="config-highlight-<%= script.scriptId %>"><code></code></pre>
+                        <textarea id="configTableTextarea-<%= script.scriptId %>"
+                          class="w-full"
+                          style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;" autocomplete="off" spellcheck="false" placeholder="Paste your config table here..."><%= script.configTable %></textarea>
+                      </div>
+                      <div class="mt-2 flex items-center gap-3">
+                        <span class="inline-block px-2 py-1 rounded-md bg-white/[0.04] text-gray-500 text-[10px] font-mono">Auto-save</span>
+                        <span id="configTableStatus-<%= script.scriptId %>" class="text-[10px] text-gray-500 flex items-center gap-2"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="sub-tab-content hidden flex flex-col w-full flex-1 px-2 pt-6" data-subtab-panel="live" id="live-panel-<%= script.scriptId %>">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="text-sm text-white/70">Live View</div>
+                      <div class="flex items-center gap-2 text-xs">
+                        <span id="live-count-<%= script.scriptId %>" class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400/80 rounded">0</span>
+                        <button type="button" onclick="refreshLiveView('<%= script.scriptId %>')" class="px-2 py-0.5 bg-white/[0.05] text-white/60 rounded">Refresh</button>
+                      </div>
+                    </div>
+
+                    <div class="ls-table-wrapper mb-4" style="max-height: 260px; overflow:auto;">
+                      <table class="ls-table" id="live-table-<%= script.scriptId %>">
+                        <thead>
+                          <tr>
+                            <th style="width:28px"><input type="checkbox" id="live-selectall-<%= script.scriptId %>" onchange="toggleAllLive('<%= script.scriptId %>', this.checked)"></th>
+                            <th>Discord User</th>
+                            <th>Key</th>
+                            <th>HWID</th>
+                            <th>Connected</th>
+                            <th>Last Seen</th>
+                            <th style="width:120px">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody id="live-tbody-<%= script.scriptId %>">
+                          <tr><td colspan="7" class="ls-table-empty">
+                            No clients connected yet.<br>
+                            <span style="font-size:10px;opacity:0.6">Clients appear here in real-time when they connect via the loader.</span>
+                          </td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div class="rounded-lg border border-white/[0.06] bg-white/[0.01] p-4">
+
+                      <textarea id="live-code-<%= script.scriptId %>" rows="7"
+                        class="w-full font-mono text-sm bg-[#0a0a0a] border border-white/[0.06] rounded-lg p-3 resize-y focus:outline-none focus:border-white/20"
+                        placeholder="Enter Lua code here..."></textarea>
+                      <div class="flex flex-wrap gap-2 mt-3">
+                        <button type="button" onclick="confirmLiveAction('<%= script.scriptId %>', 'send-all')" class="px-4 py-1.5 text-xs rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 font-medium hover:bg-red-500/20 transition">Send to ALL connected</button>
+                        <button type="button" onclick="confirmLiveAction('<%= script.scriptId %>', 'send-selected')" class="px-4 py-1.5 text-xs rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/70 hover:bg-white/[0.08] hover:text-white/90 transition">Send to SELECTED</button>
+                        <button type="button" onclick="confirmLiveAction('<%= script.scriptId %>', 'kick-all')" class="px-3 py-1.5 text-xs rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 font-medium hover:bg-red-500/20 transition">Kick All</button>
+                        <button type="button" onclick="confirmLiveAction('<%= script.scriptId %>', 'ping-all')" class="px-3 py-1.5 text-xs rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/70 hover:bg-white/[0.08] hover:text-white/90 transition">Ping All</button>
+                      </div>
+
+                      <div class="mt-4 pt-3 border-t border-white/[0.06]">
+                        <div class="flex items-center justify-between mb-1.5">
+                          <span class="text-[10px] uppercase tracking-[0.5px] text-white/50">Quick Notification</span>
+                        </div>
+                        <div class="flex gap-2">
+                          <input 
+                            id="notif-msg-<%= script.scriptId %>" 
+                            type="text" 
+                            placeholder="Enter message to show on screen..."
+                            class="flex-1 bg-[#0a0a0a] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm placeholder:text-white/30 focus:outline-none focus:border-white/20"
+                          />
+                          <button 
+                            type="button" 
+                            onclick="sendQuickNotification('<%= script.scriptId %>')"
+                            class="px-4 py-1.5 text-xs rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 font-medium hover:bg-sky-500/15 active:bg-sky-500/20 transition"
+                          >
+                            Send
+                          </button>
+                        </div>
+                      </div>
+
+                      <div id="live-status-<%= script.scriptId %>" class="mt-2 text-[11px] text-emerald-400/70 h-4"></div>
+                    </div>
+                  </div>
+            </section>
+            <% }) %>
+
+      </div>
+    </div>
+  </div>
+
+
+  <% scripts.forEach(script=> { %>
+    <div id="scriptPreviewModal-<%= script.scriptId %>"
+      class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 px-4 py-6" aria-hidden="true"
+      role="dialog" aria-labelledby="scriptPreviewTitle-<%= script.scriptId %>">
+      <div class="max-w-3xl w-full bg-[#0a0a0a] rounded-lg border border-white/[0.06] p-6 modal-fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <h4 id="scriptPreviewTitle-<%= script.scriptId %>" class="text-lg font-semibold">Script Preview: <%=
+              script.name %>
+          </h4>
+          <button aria-label="Close" onclick="toggleModal('scriptPreviewModal-<%= script.scriptId %>')"
+            class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <div class="mb-4">
+          <textarea readonly
+            class="w-full h-64 bg-[#0a0a0a] text-white/60 rounded-md border border-white/[0.06] p-3 resize-none overflow-auto font-mono"
+            style="font-family:monospace;"> <%= script.luaContent %> </textarea>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+
+
+      <div id="newScriptModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 px-4 py-6"
+        aria-hidden="true" role="dialog" aria-labelledby="createScriptTitle">
+        <div
+          class="max-w-md w-full rounded-xl bg-[#0a0a0a] border border-white/[0.06] p-6 modal-fade-in relative">
+          <div class="flex items-center justify-between mb-4">
+            <h4 id="createScriptTitle" class="text-sm font-semibold text-white/90">Create New Script</h4>
+            <button aria-label="Close" onclick="toggleModal('newScriptModal')"
+              class="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-gray-400 hover:text-white transition">✕</button>
+          </div>
+
+          <form action="/q1x" method="POST" onsubmit="toggleModal('newScriptModal')">
+            <div class="mb-6">
+              <label class="block text-xs font-medium text-gray-400 mb-2">Script Name</label>
+              <input type="text" name="c" required
+                class="w-full bg-white/[0.02] px-3 py-2 rounded-lg border border-white/[0.06] text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-white/[0.12] transition-all duration-150">
+            </div>
+
+            <input type="hidden" name="a" value="<%= guild.id %>">
+
+            <div class="flex justify-end gap-3">
+              <button type="button" onclick="toggleModal('newScriptModal')"
+                class="px-4 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/60 text-xs font-medium hover:bg-white/[0.1] transition">Cancel</button>
+              <button type="submit"
+                class="px-4 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.08] text-white/80 text-xs font-medium hover:bg-white/[0.12] transition">Create</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="liveConfirmModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/70 px-4" aria-hidden="true" role="dialog">
+        <div class="max-w-md w-full rounded-2xl bg-[#0a0a0a] border border-white/[0.08] p-6 modal-fade-in">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="mt-1 text-red-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div class="flex-1">
+              <h3 id="liveConfirmTitle" class="text-white font-semibold text-[15px]">Confirm Remote Execution</h3>
+              <p id="liveConfirmMessage" class="text-[12.5px] text-white/60 mt-1.5 leading-snug"></p>
+            </div>
+          </div>
+
+          <div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 mb-4 text-[12px] font-mono text-white/70 max-h-24 overflow-auto" id="liveConfirmCodePreview"></div>
+
+          <div class="flex gap-3">
+            <button onclick="cancelLiveConfirm()" class="flex-1 px-4 py-2 text-sm rounded-lg bg-white/[0.06] border border-white/[0.06] text-white/60 hover:bg-white/[0.1] transition">Cancel</button>
+            <button onclick="executeConfirmedLiveAction()" class="flex-1 px-4 py-2 text-sm rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 font-medium hover:bg-red-500/20 transition">Execute</button>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="toastContainer" class="toast"></div>
+
+
+  <script>
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const target = e.currentTarget.getAttribute('data-tab');
+            document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
+            const el = document.getElementById(target);
+            if (el) el.classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+          });
+        });
+
+
+        function toggleModal(id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const isHidden = el.classList.contains('hidden');
+          if (isHidden) {
+            el.classList.remove('hidden');
+            el.setAttribute('aria-hidden', 'false');
+            el.classList.remove('modal-fade-out');
+            el.classList.add('modal-fade-in');
+
+            const focusable = el.querySelector('input,button,textarea,select,a') || el;
+            if (focusable) focusable.focus();
+          } else {
+            el.classList.remove('modal-fade-in');
+            el.classList.add('modal-fade-out');
+            setTimeout(() => {
+              el.classList.add('hidden');
+              el.setAttribute('aria-hidden', 'true');
+            }, 160);
+          }
+        }
+
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            document.querySelectorAll('[role="dialog"]').forEach(d => {
+              if (!d.classList.contains('hidden')) toggleModal(d.id);
+            });
+          }
+        });
+
+
+        function isDiscordWebhook(url) {
+          try {
+            if (!url) return false;
+            const pattern = /^https:\/\/(discord(?:app)?\.com)\/api\/webhooks\/\d{17,20}\/[A-Za-z0-9_-]{30,}$/;
+            return pattern.test(url);
+          } catch {
+            return false;
+          }
+        }
+
+        function show_settings_error(scriptId, message) {
+          const holder = document.getElementById(`errorHolder-${scriptId}`);
+          if (!holder) return;
+          holder.innerText = message;
+          holder.classList.remove('hidden');
+          setTimeout(() => holder.classList.add('hidden'), 6000);
+        }
+
+        function showToast(message, opts = {}) {
+          const container = document.getElementById('toastContainer');
+          if (!container) return;
+          const id = `toast-${Date.now()}`;
+          const el = document.createElement('div');
+          el.id = id;
+          el.className = 'bg-[#0a0a0a] border border-white/[0.06] px-4 py-2 rounded-md text-sm mb-2';
+          el.style.minWidth = '220px';
+          el.innerText = message;
+          container.appendChild(el);
+          setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .25s ease'; setTimeout(() => el.remove(), 300); }, opts.duration || 3000);
+        }
+
+        function previewAndStageLogo(scriptId, inputEl) {
+          const file = inputEl.files && inputEl.files[0];
+          if (!file) return;
+          if (!file.type.startsWith('image/')) { showToast('Please select an image file.'); inputEl.value = ''; return; }
+
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            const img = new Image();
+            img.onload = function() {
+              const MAX = 192;
+              let w = img.width;
+              let h = img.height;
+              if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * (MAX / w)); w = MAX; }
+                else { w = Math.round(w * (MAX / h)); h = MAX; }
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d', { alpha: true });
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, 0, 0, w, h);
+
+              const resizedDataUrl = canvas.toDataURL('image/png', 0.92);
+
+              const preview = document.getElementById('logoPreview-' + scriptId);
+              if (preview) {
+                preview.innerHTML = '<img src="' + resizedDataUrl + '" class="h-full w-full object-contain" />';
+                preview.dataset.staged = resizedDataUrl;
+              }
+            };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+
+        async function uploadStagedLogo(scriptId, guildId) {
+          const preview = document.getElementById('logoPreview-' + scriptId);
+          const status = document.getElementById('logoStatus-' + scriptId);
+          if (!preview || !preview.dataset.staged) {
+            showToast('Choose an image first.');
+            return;
+          }
+          if (status) status.textContent = 'Uploading...';
+          try {
+            const res = await fetch('/qLx', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ a: guildId, b: scriptId, logo: preview.dataset.staged })
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (status) status.textContent = 'Saved.';
+              showToast('Logo updated.');
+              setTimeout(() => { window.location.reload(); }, 650);
+            } else {
+              if (status) status.textContent = '';
+              showToast(data.error || 'Failed to upload logo.');
+            }
+          } catch (e) {
+            if (status) status.textContent = '';
+            showToast('Network error while uploading logo.');
+          }
+        }
+
+        async function removeScriptLogo(scriptId, guildId) {
+          const status = document.getElementById('logoStatus-' + scriptId);
+          if (status) status.textContent = 'Removing...';
+          try {
+            const res = await fetch('/qLx', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ a: guildId, b: scriptId, logo: '' })
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (status) status.textContent = '';
+              showToast('Logo removed.');
+              setTimeout(() => { window.location.reload(); }, 500);
+            } else {
+              if (status) status.textContent = '';
+              showToast(data.error || 'Failed to remove logo.');
+            }
+          } catch (e) {
+            if (status) status.textContent = '';
+            showToast('Network error.');
+          }
+        }
+
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('[data-action="q6x"]');
+          if (!btn) return;
+          const scriptId = btn.dataset.scriptId;
+          const scriptName = btn.dataset.scriptName || '';
+          confirmDeleteScript(scriptId, scriptName);
+        });
+
+
+        function setupAutoSaveSettings(scriptId) {
+          const form = document.getElementById(`updateScriptSettingsForm-${scriptId}`);
+          const status = document.getElementById(`scriptSettingsStatus-${scriptId}`);
+          if (!form || !status) return;
+          let timeout = null;
+          let lastData = null;
+          function saveSettings() {
+            const formData = new FormData(form);
+            const plainData = Object.fromEntries(formData.entries());
+            plainData.j = isDiscordWebhook(plainData.j) ? plainData.j : '';
+            plainData.k = isDiscordWebhook(plainData.k) ? plainData.k : '';
+
+            const dataStr = JSON.stringify(plainData);
+            console.log(dataStr);
+            if (dataStr === lastData) return;
+            lastData = dataStr;
+            status.innerHTML = `<svg class=\"animate-spin h-4 w-4 inline-block\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\" fill=\"none\"></circle></svg> Saving...`;
+            fetch('/q7x', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: dataStr
+            })
+              .then(res => res.ok ? res.json() : Promise.reject(res))
+              .then(() => {
+                status.textContent = 'Saved!';
+                setTimeout(() => { if (status.textContent === 'Saved!') status.textContent = ''; }, 1800);
+              })
+              .catch((e) => {
+                console.log(e);
+                status.textContent = 'Error saving.';
+                setTimeout(() => { status.textContent = ''; }, 3000);
+              });
+          }
+          form.querySelectorAll('input,select,textarea').forEach(el => {
+            el.addEventListener('input', function () {
+              if (timeout) clearTimeout(timeout);
+              timeout = setTimeout(saveSettings, 1000);
+            });
+          });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+          if (window.__scriptsMeta && Array.isArray(window.__scriptsMeta)) {
+            window.__scriptsMeta.forEach(s => setupAutoSaveSettings(String(s.scriptId)));
+          }
+        });
+      </script>
+      <script id="scriptsMeta" type="application/json"><%- JSON.stringify(scripts.map(s => ({ scriptId: String(s.scriptId), executions: s.executions || {} }))) %></script>
+      <script>
+        (function(){
+          try {
+            const el = document.getElementById('scriptsMeta');
+            window.__scriptsMeta = el ? JSON.parse(el.textContent || '[]') : [];
+          } catch { window.__scriptsMeta = []; }
+        })();
+
+        if (!window.__projectnameTheme) {
+          window.__projectnameTheme = (() => {
+            const accent = 'rgba(255,255,255,0.4)';
+            const grid = '#141414';
+            const accentBg = 'rgba(255,255,255,0.04)';
+            return { accent, accentBg, grid };
+          })();
+        }
+
+        (function() {
+          let currentSubTab = 'Executions'; 
+
+          function buildRangeData(range, executions) {
+            if (range === 'day') {
+
+              const now = new Date();
+              const labels = [];
+              const data = [];
+              for (let i = 23; i >= 0; i--) {
+                const t = new Date(now);
+                t.setHours(now.getHours() - i, 0, 0, 0);
+                const dayKey = t.toISOString().split('T')[0];
+                const hourLabel = t.getHours();
+                labels.push(`${hourLabel}:00`);
+
+                const val = executions && executions[dayKey] ? executions[dayKey] : 0;
+                data.push(val);
+              }
+              return { labels, data, isHourly: true };
+            }
+            const today = new Date();
+            const dates = [];
+            const span = range === 'week' ? 6 : 29;
+            for (let i = span; i >= 0; i--) { const d = new Date(today); d.setDate(today.getDate() - i); dates.push(d.toISOString().split('T')[0]); }
+            const labels = dates.map(d => {
+              const dateObj = new Date(d);
+              return range === 'week'
+                ? dateObj.toLocaleDateString(undefined, { weekday: 'short' })
+                : dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            });
+            const data = dates.map(d => (executions && executions[d]) || 0);
+            return { labels, data };
+          }
+
+          function initUnifiedChart(meta) {
+            const canvas = document.getElementById('execChart-' + meta.scriptId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const { accent, accentBg, grid } = window.__projectnameTheme;
+            const week = buildRangeData('week', meta.executions || {});
+            const month = buildRangeData('month', meta.executions || {});
+            const day = buildRangeData('day', meta.executions || {});
+            const gradient = ctx.createLinearGradient(0,0,0,400);
+            gradient.addColorStop(0, accentBg);
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            const chart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: week.labels,
+                datasets: [{
+                  label: 'Executions',
+                  data: week.data,
+                  borderColor: accent,
+                  backgroundColor: gradient,
+                  fill: true,
+                  tension: 0.35,
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                  pointBackgroundColor: accent,
+                  pointBorderColor: '#000',
+                  pointBorderWidth: 1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: '#0a0a0a',
+                    titleColor: '#fff',
+                    bodyColor: 'rgba(255,255,255,0.6)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false
+                  }
+                },
+                interaction: { intersect: false, mode: 'index' },
+                scales: {
+                  x: {
+                    grid: { color: grid },
+                    ticks: { color: '#b1b4c2', maxRotation: 0, font: { size: 11, weight: 600 } }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: grid },
+                    ticks: { color: '#b1b4c2', font: { size: 11, weight: 600 } }
+                  }
+                }
+              }
+            });
+            canvas.__chartMeta = { chart, week, month, day };
+          }
+
+          function showCurrentSubTabForActiveScript() {
+            const activeSection = document.querySelector('.tab-content:not(.hidden)');
+            if (!activeSection) return;
+            activeSection.querySelectorAll('.sub-tab-content').forEach(p => {
+              const match = p.getAttribute('data-subtab-panel') === currentSubTab;
+              p.classList.toggle('hidden', !match);
+            });
+            if (currentSubTab === 'Executions' && !activeSection.dataset.chartsInit) {
+              const sid = activeSection.id.replace('script-', '');
+              const meta = (window.__scriptsMeta || []).find(s => String(s.scriptId) === String(sid));
+              if (meta) initUnifiedChart(meta);
+              activeSection.dataset.chartsInit = '1';
+            }
+          }
+
+          document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const target = btn.getAttribute('data-subtab');
+              currentSubTab = target;
+              document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              showCurrentSubTabForActiveScript();
+            });
+          });
+
+          document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => setTimeout(showCurrentSubTabForActiveScript, 0));
+          });
+
+          document.addEventListener('DOMContentLoaded', () => {
+            showCurrentSubTabForActiveScript();
+
+            document.addEventListener('click', function(e){
+              const btn = e.target.closest('.chart-toggle-group .toggle-btn');
+              if(!btn) return;
+              const scriptId = btn.getAttribute('data-script');
+              const range = btn.getAttribute('data-range');
+              const canvas = document.getElementById('execChart-' + scriptId);
+              if(!canvas || !canvas.__chartMeta) return;
+              const { chart, week, month, day } = canvas.__chartMeta;
+              let pack;
+              if (range === 'month') pack = month; else if (range === 'day') pack = day; else pack = week;
+              chart.data.labels = pack.labels;
+              chart.data.datasets[0].data = pack.data;
+              chart.update();
+              const group = btn.closest('.chart-toggle-group');
+              group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+
+            });
+          });
+
+        })();
+      </script>
+
+      <% scripts.forEach(script=> { %>
+        <% script.users.forEach(user=> { %>
+          <div id="userModal-<%= script.scriptId %>-<%= user.key %>"
+            class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 px-4 py-6" aria-hidden="true"
+            role="dialog">
+            <div
+              class="max-w-2xl w-full rounded-xl bg-[#0a0a0a] border border-white/[0.06] p-6 modal-fade-in relative">
+              <div class="overflow-auto max-h-[80vh]">
+                <div class="flex items-center justify-between mb-6">
+                  <h4 class="text-sm font-semibold text-white/90">User Info</h4>
+                  <button aria-label="Close" onclick="toggleModal('userModal-<%= script.scriptId %>-<%= user.key %>')"
+                    class="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-gray-400 hover:text-white transition">✕</button>
+                </div>
+                <div class="space-y-3 mb-5">
+                  <div class="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">Key</span>
+                    <span class="font-mono text-xs text-gray-300"><%= user.key %></span>
+                  </div>
+                  <div class="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">Username</span>
+                    <span class="text-xs text-gray-300"><%= user.username %></span>
+                  </div>
+                  <div class="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">Usage</span>
+                    <span class="text-xs text-gray-300"><%= user.usageCount %></span>
+                  </div>
+                  <div class="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">Lifetime</span>
+                    <span class="text-xs text-gray-300"><%= user.lifetime || '—' %></span>
+                  </div>
+                  <div class="flex items-center justify-between py-2">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">Expiration</span>
+                    <span class="text-xs text-gray-300"><%= user.unix_expiration || '—' %></span>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="block text-[10px] uppercase tracking-wider text-gray-500 mb-2">Loader Script</label>
+                  <pre
+                    class="bg-white/[0.02] text-gray-300 rounded-lg border border-white/[0.06] p-4 font-mono text-xs overflow-x-auto select-all"
+                    style="white-space:pre; word-break:break-all;">
+loadstring(game:HttpGet("https://auth.yourdomain.com/loader/<%= encodeIds(guild.id, script.scriptId) %>?key=<%= user.key %>"))()
+                  </pre>
+                </div>
+                <div class="flex justify-end">
+                  <button type="button" onclick="deleteUserFromScript('<%= script.scriptId %>', '<%= user.key %>')"
+                    class="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20 transition">Delete User</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+            <% }) %>
+              <script>
+                  function showUserModal(scriptId, key) {
+                    const modalId = `userModal-${scriptId}-${key}`;
+                    toggleModal(modalId);
+                  }
+
+                function deleteUserFromScript(scriptId, key) {
+                  if (!window.confirm('Are you sure you want to delete this user from the script? This cannot be undone.')) return;
+                  fetch('/q5x', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      a: '<%= guild.id %>',
+                      b: scriptId,
+                      i: key
+                    })
+                  })
+                    .then(res => res.ok ? res.json() : Promise.reject(res))
+                    .then(data => {
+                      showToast('User deleted.', { duration: 3500 });
+                      setTimeout(() => { window.location.reload(); }, 1200);
+                    })
+                    .catch((e) => {
+                      showToast('Error deleting user.', { duration: 3500 });
+                      console.log(e);
+                    });
+                }
+              </script>
+                  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const scriptTabKey = 'lastOpenedScriptTab';
+    const mainTabKey = 'lastOpenedMainTab';
+
+    const lastScriptTab = localStorage.getItem(scriptTabKey);
+    if (lastScriptTab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const target = btn.getAttribute('data-tab');
+        if (target === lastScriptTab) {
+          btn.click();
+        }
+      });
+    }
+
+    const lastMainTab = localStorage.getItem(mainTabKey);
+    if (lastMainTab) {
+      document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+        const target = btn.getAttribute('data-subtab');
+        if (target === lastMainTab) {
+          btn.click();
+        }
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const target = e.currentTarget.getAttribute('data-tab');
+        localStorage.setItem(scriptTabKey, target);
+      });
+    });
+
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const target = e.currentTarget.getAttribute('data-subtab');
+        localStorage.setItem(mainTabKey, target);
+      });
+    });
+  });
+
+  window.__liveIntervals = window.__liveIntervals || {};
+
+  function timeAgo(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5) return 'just now';
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    const h = Math.floor(m / 60);
+    return h + 'h ago';
+  }
+  function fmtConnected(ts) {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    const m = Math.floor(s / 60);
+    if (m < 1) return 'now';
+    if (m < 60) return m + 'm';
+    const h = Math.floor(m / 60);
+    return h + 'h ' + (m % 60) + 'm';
+  }
+
+  function refreshLiveView(scriptId) {
+    const status = document.getElementById('live-status-' + scriptId);
+    const countEl = document.getElementById('live-count-' + scriptId);
+    fetch('/panel/qlx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ a: '<%= guild.id %>', b: scriptId })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(data => {
+        if (!data.success) throw new Error(data.error || 'Failed');
+        renderLiveTable(scriptId, data.clients || []);
+        if (countEl) countEl.textContent = (data.count || 0) + ' connected';
+        if (status) status.textContent = '';
+      })
+      .catch(e => {
+        if (status) status.textContent = 'Failed to load live clients';
+        console.warn('Live view refresh error', e);
+      });
+  }
+
+  function renderLiveTable(scriptId, clients) {
+    const tbody = document.getElementById('live-tbody-' + scriptId);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!clients || clients.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="ls-table-empty">No clients connected yet.</td></tr>';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    clients.forEach((c, idx) => {
+      const tr = document.createElement('tr');
+      const shortKey = (c.key || '').slice(-6);
+      const shortHwid = (c.hwid || '').slice(0, 12) + '…';
+      const conn = fmtConnected(c.connectedAt || Date.now());
+      const seen = timeAgo(c.lastSeen || Date.now());
+      tr.innerHTML = `
+        <td data-label="Select"><input type="checkbox" class="live-rowcheck" data-key="${c.key}" data-sid="${scriptId}"></td>
+        <td data-label="User" class="font-medium text-white/80">${c.username || 'Unknown'}</td>
+        <td data-label="Key"><code class="text-[11px] text-white/50 select-all">${shortKey}</code></td>
+        <td data-label="HWID"><code class="text-[11px] text-white/40">${shortHwid}</code></td>
+        <td data-label="Connected" class="text-[11px] text-white/50">${conn}</td>
+        <td data-label="Last Seen" class="text-[11px] text-emerald-400/70">${seen}</td>
+        <td data-label="Action">
+          <button type="button" class="text-[10px] px-2 py-0.5 rounded bg-white/[0.04] hover:bg-red-500/20 text-red-400/80" onclick="kickLiveClient('${scriptId}', '${c.key}')">Kick</button>
+        </td>
+      `;
+      frag.appendChild(tr);
+    });
+    tbody.appendChild(frag);
+  }
+
+  function toggleAllLive(scriptId, checked) {
+    const tbody = document.getElementById('live-tbody-' + scriptId);
+    if (!tbody) return;
+    tbody.querySelectorAll('.live-rowcheck').forEach(cb => cb.checked = checked);
+  }
+
+  function getSelectedLiveKeys(scriptId) {
+    const tbody = document.getElementById('live-tbody-' + scriptId);
+    if (!tbody) return [];
+    return Array.from(tbody.querySelectorAll('.live-rowcheck:checked')).map(cb => cb.dataset.key);
+  }
+
+  function sendLiveCode(scriptId, mode) {
+    const ta = document.getElementById('live-code-' + scriptId);
+    if (!ta) return;
+    const code = ta.value.trim();
+    if (!code) return showToast('Enter Lua code to send.', { duration: 2000 });
+
+    const status = document.getElementById('live-status-' + scriptId);
+    let targets = null;
+    if (mode === 'selected') {
+      targets = getSelectedLiveKeys(scriptId);
+      if (targets.length === 0) return showToast('No clients selected.', { duration: 2000 });
+    }
+
+    const doSend = (targetKey) => fetch('/panel/qmx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ a: '<%= guild.id %>', b: scriptId, c: targetKey, d: code })
+    }).then(r => r.ok ? r.json() : Promise.reject());
+
+    if (status) status.textContent = 'Sending...';
+
+    const promises = (targets ? targets.map(k => doSend(k)) : [doSend(null)]);
+    Promise.allSettled(promises).then(results => {
+      const ok = results.filter(r => r.status === 'fulfilled' && r.value && r.value.success).length;
+      const total = results.length;
+      if (status) {
+        status.textContent = `Sent to ${ok} client(s)`;
+        setTimeout(() => { if (status) status.textContent = ''; }, 2500);
+      }
+      showToast(`Executed on ${ok}/${total} client(s)`, { duration: 2200 });
+      // refresh list shortly after
+      setTimeout(() => refreshLiveView(scriptId), 800);
+    }).catch(() => {
+      if (status) status.textContent = 'Send failed';
+    });
+  }
+
+  function quickLiveAction(scriptId, action) {
+    const ta = document.getElementById('live-code-' + scriptId);
+    if (!ta) return;
+    if (action === 'kick') {
+      ta.value = `game:GetService("Players").LocalPlayer:Kick("Auth disconnected you")`;
+      sendLiveCode(scriptId, null);
+    } else if (action === 'ping') {
+      ta.value = `print("[Luasec] Live ping from owner at " .. os.date())`;
+      sendLiveCode(scriptId, null);
+    }
+  }
+
+  function sendQuickNotification(scriptId) {
+    const input = document.getElementById('notif-msg-' + scriptId);
+    const ta = document.getElementById('live-code-' + scriptId);
+    if (!input || !ta) return;
+
+    const rawMessage = (input.value || '').trim();
+    if (!rawMessage) {
+      showToast('Please enter a message', { duration: 1600 });
+      return;
+    }
+
+    const escaped = rawMessage
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '');
+
+    const notifCode = `local TweenService = game:GetService("TweenService")
+    local Players = game:GetService("Players")
+
+    local p = Players.LocalPlayer
+    local pg = p:WaitForChild("PlayerGui")
+
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "Notif_" .. tostring(math.random(10000,99999))
+    sg.ResetOnSpawn = false
+    sg.IgnoreGuiInset = true
+    sg.Parent = pg
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 72)
+    frame.Position = UDim2.new(0.5, -150, 0, -100)  -- Start above screen
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    frame.BackgroundTransparency = 0.1
+    frame.BorderSizePixel = 0
+    frame.Parent = sg
+
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 9)
+
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(55, 55, 65)
+    stroke.Thickness = 1
+
+    local accent = Instance.new("Frame")
+    accent.Size = UDim2.new(0, 3, 1, -8)
+    accent.Position = UDim2.new(0, 0, 0, 4)
+    accent.BackgroundColor3 = Color3.fromRGB(130, 150, 255)
+    accent.BorderSizePixel = 0
+    accent.Parent = frame
+    Instance.new("UICorner", accent).CornerRadius = UDim.new(0, 6)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -50, 0, 18)
+    titleLabel.Position = UDim2.new(0, 14, 0, 8)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "Notification"
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 13
+    titleLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = frame
+
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.Size = UDim2.new(1, -28, 0, 38)
+    msgLabel.Position = UDim2.new(0, 14, 0, 27)
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.Text = '${escaped}'
+    msgLabel.Font = Enum.Font.Gotham
+    msgLabel.TextSize = 12.5
+    msgLabel.TextColor3 = Color3.fromRGB(195, 195, 200)
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    msgLabel.TextYAlignment = Enum.TextYAlignment.Top
+    msgLabel.TextWrapped = true
+    msgLabel.Parent = frame
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 24, 0, 24)
+    closeBtn.Position = UDim2.new(1, -28, 0, 6)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Text = "x"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 18
+    closeBtn.TextColor3 = Color3.fromRGB(130, 130, 140)
+    closeBtn.Parent = frame
+
+    local tweenIn = TweenService:Create(frame, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -150, 0.5, 0),
+        BackgroundTransparency = 0.1
+    })
+    tweenIn:Play()
+
+    local autoDismiss = task.delay(3, function()
+        if frame and frame.Parent then
+            local tweenOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0.5, -150, 0, -100),
+                BackgroundTransparency = 1
+            })
+            tweenOut:Play()
+            tweenOut.Completed:Wait()
+            sg:Destroy()
+        end
+    end)
+
+    closeBtn.MouseButton1Click:Connect(function()
+        task.cancel(autoDismiss) -- Cancel auto dismiss if manually closed
+        local tweenOut = TweenService:Create(frame, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0.5, -150, 0, -100),
+            BackgroundTransparency = 1
+        })
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+        sg:Destroy()
+    end)`;
+    ta.value = notifCode;
+
+    input.value = '';
+
+    confirmLiveAction(scriptId, 'send-selected');
+  }
+
+  function kickLiveClient(scriptId, key) {
+    const code = `game:GetService("Players").LocalPlayer:Kick("Auth disconnected you")`;
+    fetch('/panel/qmx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ a: '<%= guild.id %>', b: scriptId, c: key, d: code })
+    })
+      .then(() => {
+        showToast('Kick sent.');
+        setTimeout(() => refreshLiveView(scriptId), 600);
+      })
+      .catch(() => showToast('Failed to send kick.'));
+  }
+
+  function startLivePolling(scriptId) {
+    stopLivePolling(scriptId);
+    refreshLiveView(scriptId);
+    window.__liveIntervals[scriptId] = setInterval(() => {
+      const panel = document.getElementById('live-panel-' + scriptId);
+      if (panel && !panel.classList.contains('hidden')) {
+        refreshLiveView(scriptId);
+      } else {
+        stopLivePolling(scriptId);
+      }
+    }, 2800);
+  }
+  function stopLivePolling(scriptId) {
+    if (window.__liveIntervals[scriptId]) {
+      clearInterval(window.__liveIntervals[scriptId]);
+      delete window.__liveIntervals[scriptId];
+    }
+  }
+
+  let pendingLiveAction = null;
+
+  function confirmLiveAction(scriptId, actionType) {
+    const modal = document.getElementById('liveConfirmModal');
+    const titleEl = document.getElementById('liveConfirmTitle');
+    const msgEl = document.getElementById('liveConfirmMessage');
+    const previewEl = document.getElementById('liveConfirmCodePreview');
+
+    if (!modal) return;
+
+    const textarea = document.getElementById('live-code-' + scriptId);
+    const code = (textarea && textarea.value.trim()) || '(no code provided)';
+
+    let actionLabel = '';
+    let warning = '';
+
+    if (actionType === 'send-all') {
+      actionLabel = 'Send to ALL connected clients';
+      warning = 'This will execute the code on every currently connected client for this script.';
+    } else if (actionType === 'send-selected') {
+      actionLabel = 'Send to SELECTED clients';
+      warning = 'This will execute the code only on the clients you have checked.';
+    } else if (actionType === 'kick-all') {
+      actionLabel = 'Kick ALL connected clients';
+      warning = 'This is a destructive action. All connected players will be kicked from the game.';
+    } else if (actionType === 'ping-all') {
+      actionLabel = 'Ping ALL connected clients';
+      warning = 'This will run a harmless print statement on all clients.';
+    }
+
+    titleEl.textContent = actionLabel;
+    msgEl.innerHTML = warning + '<br><br><strong>Code to execute:</strong>';
+    previewEl.textContent = code.length > 280 ? code.slice(0, 280) + '…' : code;
+
+    pendingLiveAction = { scriptId, actionType, code };
+
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function cancelLiveConfirm() {
+    const modal = document.getElementById('liveConfirmModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    pendingLiveAction = null;
+  }
+
+  function executeConfirmedLiveAction() {
+    if (!pendingLiveAction) return cancelLiveConfirm();
+
+    const { scriptId, actionType, code } = pendingLiveAction;
+    const modal = document.getElementById('liveConfirmModal');
+
+    if (modal) {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    if (actionType === 'send-all' || actionType === 'send-selected') {
+      const mode = actionType === 'send-all' ? null : 'selected';
+      // Temporarily set the textarea so existing sendLiveCode works
+      const ta = document.getElementById('live-code-' + scriptId);
+      if (ta) ta.value = code;
+      sendLiveCode(scriptId, mode);
+    } else if (actionType === 'kick-all') {
+      const ta = document.getElementById('live-code-' + scriptId);
+      if (ta) ta.value = `game:GetService("Players").LocalPlayer:Kick("Auth disconnected you")`;
+      sendLiveCode(scriptId, null);
+    } else if (actionType === 'ping-all') {
+      const ta = document.getElementById('live-code-' + scriptId);
+      if (ta) ta.value = `print("[Luasec] Live ping from owner at " .. os.date())`;
+      sendLiveCode(scriptId, null);
+    }
+
+    pendingLiveAction = null;
+  }
+
+  (function patchSubtabForLive() {
+    const origClick = document.querySelectorAll('.sub-tab-btn');
+
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.sub-tab-btn');
+      if (!btn) return;
+      const tab = btn.getAttribute('data-subtab');
+      setTimeout(() => {
+        const activeSection = document.querySelector('.tab-content:not(.hidden)');
+        if (!activeSection) return;
+        const sid = activeSection.id.replace('script-', '');
+        if (tab === 'live') {
+          startLivePolling(sid);
+        } else {
+          stopLivePolling(sid);
+        }
+      }, 60);
+    }, true);
+
+    window.addEventListener('beforeunload', () => {
+      Object.keys(window.__liveIntervals || {}).forEach(stopLivePolling);
+    });
+  })();
+</script>
+
+<script>
+  function highlightLua(code) {
+    const keywords = new Set(['and','break','do','else','elseif','end','for','function','if','in','local','not','or','repeat','return','then','until','while','goto']);
+    const builtins = new Set(['print','require','pcall','xpcall','error','warn','type','typeof','tostring','tonumber','select','rawget','rawset','rawequal','rawlen','setmetatable','getmetatable','ipairs','pairs','next','unpack','table','string','math','coroutine','os','io','debug','bit32','task','game','workspace','script','Instance','Vector3','Vector2','CFrame','Color3','UDim2','UDim','Enum','BrickColor','Ray','NumberRange','NumberSequence','ColorSequence','TweenInfo','spawn','wait','delay','tick','time','loadstring','getfenv','setfenv','assert','collectgarbage']);
+    const bools = new Set(['true','false','nil','self']);
+
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    let result = '';
+    let i = 0;
+    const len = code.length;
+
+    while (i < len) {
+      // block comments
+      if (code[i] === '-' && code[i+1] === '-' && code[i+2] === '[' && code[i+3] === '[') {
+        let end = code.indexOf(']]', i + 4); if (end === -1) end = len; else end += 2;
+        result += '<span class="lua-comment">' + esc(code.slice(i, end)) + '</span>';
+        i = end; continue;
+      }
+      // line comments
+      if (code[i] === '-' && code[i+1] === '-') {
+        let end = code.indexOf('\n', i); if (end === -1) end = len;
+        result += '<span class="lua-comment">' + esc(code.slice(i, end)) + '</span>';
+        i = end; continue;
+      }
+      // long strings
+      if (code[i] === '[' && code[i+1] === '[') {
+        let end = code.indexOf(']]', i + 2); if (end === -1) end = len; else end += 2;
+        result += '<span class="lua-string">' + esc(code.slice(i, end)) + '</span>';
+        i = end; continue;
+      }
+      // strings
+      if (code[i] === '"' || code[i] === "'") {
+        const q = code[i]; let j = i + 1;
+        while (j < len && code[j] !== q) { if (code[j] === '\\') j++; j++; }
+        j++;
+        result += '<span class="lua-string">' + esc(code.slice(i, j)) + '</span>';
+        i = j; continue;
+      }
+      // numbers
+      if (/[0-9]/.test(code[i]) || (code[i] === '.' && i + 1 < len && /[0-9]/.test(code[i+1]))) {
+        let j = i;
+        if (code[j] === '0' && (code[j+1] === 'x' || code[j+1] === 'X')) { j += 2; while (j < len && /[0-9a-fA-F_]/.test(code[j])) j++; }
+        else { while (j < len && /[0-9._eE+\-]/.test(code[j])) j++; }
+        result += '<span class="lua-number">' + esc(code.slice(i, j)) + '</span>';
+        i = j; continue;
+      }
+      // identifiers / keywords
+      if (/[a-zA-Z_]/.test(code[i])) {
+        let j = i; while (j < len && /[a-zA-Z0-9_]/.test(code[j])) j++;
+        const word = code.slice(i, j);
+        if (keywords.has(word)) {
+          result += '<span class="lua-keyword">' + esc(word) + '</span>';
+        } else if (bools.has(word)) {
+          result += '<span class="lua-bool">' + esc(word) + '</span>';
+        } else if (builtins.has(word) || (j < len && code[j] === '(')) {
+          result += '<span class="lua-builtin">' + esc(word) + '</span>';
+        } else if (i > 0 && code[i-1] === '.') {
+          result += '<span class="lua-field">' + esc(word) + '</span>';
+        } else {
+          result += esc(word);
+        }
+        i = j; continue;
+      }
+      // operators
+      if ('+-*/%^#=~<>:'.indexOf(code[i]) !== -1) {
+        result += '<span class="lua-op">' + esc(code[i]) + '</span>';
+        i++; continue;
+      }
+      result += esc(code[i]);
+      i++;
+    }
+    return result;
+  }
+
+  function initLuaEditor(wrapperId, textareaId, preId) {
+    const wrapper = document.getElementById(wrapperId);
+    const textarea = document.getElementById(textareaId);
+    const pre = document.getElementById(preId);
+    if (!wrapper || !textarea || !pre) return;
+
+    const codeEl = pre.querySelector('code');
+
+    function updateHighlight() {
+      const val = textarea.value;
+      codeEl.innerHTML = highlightLua(val) + '\n'; 
+    }
+
+    updateHighlight();
+
+    let syncTimeout = null;
+    textarea.addEventListener('input', () => {
+      updateHighlight();
+      pre.scrollTop = textarea.scrollTop;
+      pre.scrollLeft = textarea.scrollLeft;
+    });
+
+    textarea.addEventListener('scroll', () => {
+      pre.scrollTop = textarea.scrollTop;
+      pre.scrollLeft = textarea.scrollLeft;
+    });
+
+    textarea.addEventListener('keydown', function(e) {
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      const value = this.value;
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const indent = '  '; // 2 spaces, Lua standard
+
+        if (e.shiftKey) {
+          // unindent
+          const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+          const lineEnd = value.indexOf('\n', start);
+          const line = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
+          if (line.startsWith(indent)) {
+            this.value = value.substring(0, lineStart) + line.slice(2) + value.substring(lineEnd === -1 ? value.length : lineEnd);
+            this.selectionStart = this.selectionEnd = start - 2;
+          }
+        } else {
+          // indent selection or single cursor
+          if (start !== end) {
+            // multi-line indent
+            const selected = value.substring(start, end);
+            const indented = selected.split('\n').map(l => indent + l).join('\n');
+            this.value = value.substring(0, start) + indented + value.substring(end);
+            this.selectionStart = start + indent.length;
+            this.selectionEnd = end + (indented.length - selected.length);
+          } else {
+            this.value = value.substring(0, start) + indent + value.substring(end);
+            this.selectionStart = this.selectionEnd = start + indent.length;
+          }
+        }
+        updateHighlight();
+      }
+
+      if (e.key === 'Enter') {
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const currentLine = value.substring(lineStart, start);
+        const match = currentLine.match(/^(\s*)/);
+        const indent = match ? match[1] : '';
+        setTimeout(() => {
+          const pos = this.selectionStart;
+          this.value = this.value.substring(0, pos) + indent + this.value.substring(pos);
+          this.selectionStart = this.selectionEnd = pos + indent.length;
+          updateHighlight();
+        }, 0);
+      }
+    });
+
+    textarea.addEventListener('focus', updateHighlight);
+  }
+
+  function initAllLuaEditors() {
+    document.querySelectorAll('.lua-editor').forEach(wrapper => {
+      const wrapperId = wrapper.id;
+      if (!wrapperId) return;
+
+      const textarea = wrapper.querySelector('textarea');
+      if (!textarea) return;
+
+      const textareaId = textarea.id;
+      let preId;
+
+      if (textareaId.startsWith('scriptEditorTextarea-')) {
+        const sid = textareaId.replace('scriptEditorTextarea-', '');
+        preId = 'editor-highlight-' + sid;
+      } else if (textareaId.startsWith('configTableTextarea-')) {
+        const sid = textareaId.replace('configTableTextarea-', '');
+        preId = 'config-highlight-' + sid;
+      }
+
+      if (preId) {
+        initLuaEditor(wrapperId, textareaId, preId);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAllLuaEditors);
+  } else {
+    initAllLuaEditors();
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.sub-tab-btn');
+    if (!btn) return;
+    const target = btn.getAttribute('data-subtab');
+    if (target === 'editor' || target === 'configtable') {
+      setTimeout(initAllLuaEditors, 60);
+    }
+  });
+</script>
+
+<script>
+  (function initMobileManagement() {
+    const select = document.getElementById('mobileScriptSelect');
+
+    if (select) {
+      select.addEventListener('change', function() {
+        const targetId = this.value;
+        const btn = document.querySelector('.tab-btn[data-tab="' + targetId + '"]');
+        if (btn) btn.click();
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const target = btn.getAttribute('data-tab');
+          if (select && select.value !== target) select.value = target;
+        });
+      });
+    }
+
+    function forceMobileDefaultTab() {
+      if (window.innerWidth > 640) return;
+
+      document.querySelectorAll('.tab-content').forEach(function(section) {
+        const execBtn = section.querySelector('.sub-tab-btn[data-subtab="Executions"]');
+        const execContent = section.querySelector('.sub-tab-content[data-subtab-panel="Executions"]');
+
+        if (execContent && !execContent.classList.contains('hidden')) {
+          const keysBtn = section.querySelector('.sub-tab-btn[data-subtab="keys"]');
+          if (keysBtn) keysBtn.click();
+        }
+      });
+    }
+
+    window.addEventListener('load', forceMobileDefaultTab);
+    window.addEventListener('resize', function() {
+      if (window.innerWidth <= 640) forceMobileDefaultTab();
+    });
+  })();
+</script>
+</body>
+
+</html>

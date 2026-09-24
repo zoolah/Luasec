@@ -1,0 +1,13 @@
+tunnel: your-tunnel-id
+ingress:
+  - hostname: app.yourdomain.com
+    service: http://localhost:3000
+  - hostname: auth.yourdomain.com
+    service: http://localhost:3000
+  - hostname: api.yourdomain.com
+    service: http://localhost:3000
+  - hostname: docs.yourdomain.com
+    service: http://localhost:3000
+  - hostname: cdn.yourdomain.com
+    service: http://localhost:3000
+  - service: http_status:404

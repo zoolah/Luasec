@@ -1,0 +1,511 @@
+<style>
+  .lua-keyword { color: #c586c0; }
+  .lua-builtin { color: #dcdcaa; }
+  .lua-string  { color: #ce9178; }
+  .lua-number  { color: #b5cea8; }
+  .lua-comment { color: #6a9955; font-style: italic; }
+  .lua-func    { color: #569cd6; }
+  .lua-op      { color: #d4d4d4; }
+  .lua-field   { color: #9cdcfe; }
+  .lua-bool    { color: #569cd6; }
+
+  .code-editor {
+    display: flex;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(0,0,0,0.35);
+    max-height: 520px;
+  }
+  .code-editor::-webkit-scrollbar { width: 6px; height: 6px; }
+  .code-editor::-webkit-scrollbar-track { background: transparent; }
+  .code-editor::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+  .code-editor::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+  .code-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .code-table td {
+    vertical-align: top;
+    padding: 0;
+  }
+  .code-lines {
+    padding: 12px 0;
+    text-align: right;
+    user-select: none;
+    min-width: 44px;
+    background: rgba(255,255,255,0.02);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.15);
+    font-size: 11px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+  .code-lines span {
+    display: block;
+    padding: 0 10px 0 8px;
+  }
+  .code-lines span.fold-hidden { display: none; }
+
+  .code-fold-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    margin-right: 4px;
+    vertical-align: middle;
+    user-select: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .code-fold-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+  }
+  .code-fold-placeholder {
+    color: rgba(255,255,255,0.2);
+    font-style: italic;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+  }
+  .code-fold-placeholder:hover {
+    color: rgba(255,255,255,0.35);
+  }
+  .code-body {
+    padding: 12px 14px;
+    color: #d4d4d4;
+    white-space: pre;
+    tab-size: 2;
+    width: 100%;
+  }
+
+  .code-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(255,255,255,0.12);
+    font-size: 12px;
+    user-select: none;
+    font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .code-editor { font-size: 11px; }
+    .code-lines { min-width: 36px; }
+    .code-lines span { padding: 0 6px 0 4px; }
+    .code-body { padding: 12px 8px; }
+
+    .mb-8 > div {
+      gap: 12px !important;
+    }
+    .text-3xl {
+      font-size: 22px !important;
+    }
+
+    .rounded-xl.border.border-white\/\[0\.06\].bg-\[\#0a0a0a\] {
+      height: 420px !important;
+    }
+
+    button, a {
+      min-height: 44px;
+    }
+  }
+</style>
+
+<div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col items-end gap-2"></div>
+
+<div class="mb-8">
+  <div class="flex flex-wrap items-end justify-between gap-6">
+    <div class="flex items-center gap-4">
+      <% if (guildIcon) { %>
+        <img src="<%= guildIcon %>" alt="" class="h-7 w-7 rounded" />
+      <% } %>
+      <div>
+        <div class="text-[11px] uppercase tracking-[1px] text-white/30"><%= guildName %></div>
+        <div class="text-3xl font-semibold tracking-[-0.025em] text-white"><%= scriptName %></div>
+      </div>
+    </div>
+
+    <% if (userEntry) { %>
+      <div class="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-white/30 mb-0.5">YOUR KEY</div>
+          <div class="font-mono text-white/80 select-all"><%= userEntry.key %></div>
+        </div>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest text-white/30 mb-0.5">STATUS</div>
+          <div class="flex items-center gap-2">
+            <span class="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span class="text-emerald-400 font-medium">Active</span>
+            <span class="text-white/40">• Expires <span id="expiresAt" class="text-white/80"><%= userEntry.unix_expiration %></span></span>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <div>
+        <div class="text-red-400/80 font-medium">No active access</div>
+        <div class="text-xs text-white/40"><%= expired ? 'Key expired.' : 'Not whitelisted for this script.' %></div>
+      </div>
+    <% } %>
+
+    <div class="flex items-center gap-3">
+      <button onclick="resetHWID()" id="resetHwidBtn" class="px-5 py-2 text-sm rounded-lg border border-white/[0.1] bg-white/[0.02] hover:bg-white/[0.05] transition <%= userEntry ? '' : 'opacity-40 pointer-events-none' %>">
+        Reset HWID
+      </button>
+      <% if (freemium) { %>
+      <button onclick="getFreemiumKey()" class="px-5 py-2 text-sm rounded-lg border border-white/[0.1] bg-white/[0.02] hover:bg-white/[0.05] transition">
+        Get Temporary Key
+      </button>
+      <% } %>
+      <a href="<%= routes && routes.dashboard ? routes.dashboard : '/dashboard' %>" class="px-5 py-2 text-sm rounded-lg border border-white/[0.1] bg-white/[0.02] hover:bg-white/[0.05] transition">Back to Dashboard</a>
+    </div>
+  </div>
+
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-sm font-semibold text-white/70 tracking-wide">LOADER SCRIPT</div>
+    <button onclick="copyScript()" class="px-4 py-1.5 text-sm rounded-lg border border-white/[0.1] bg-white/[0.02] hover:bg-white/[0.05] flex items-center gap-2 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy Script
+    </button>
+  </div>
+
+  <div class="rounded-xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden" style="height: 520px;">
+    <div class="code-editor h-full" id="codeEditor">
+      <table class="code-table h-full"><tr>
+        <td class="code-lines" id="codeLines"></td>
+        <td class="code-body" id="codeBody">
+          <div class="code-placeholder" id="codePlaceholder">Loading your secured loader script...</div>
+        </td>
+      </tr></table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const GUILD_ID = '<%= guildId %>';
+  const SCRIPT_ID = '<%= scriptId %>';
+
+  (function() {
+    const el = document.getElementById('expiresAt');
+    if (el) {
+      const unix = parseInt(el.textContent);
+      if (!isNaN(unix)) {
+        const d = new Date(unix * 1000);
+        el.textContent = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
+      }
+    }
+  })();
+
+  function highlightLua(code) {
+    const keywords = new Set([
+      'and','break','do','else','elseif','end','for','function','if','in',
+      'local','not','or','repeat','return','then','until','while','goto'
+    ]);
+    const builtins = new Set([
+      'print','require','pcall','xpcall','error','warn','type','typeof',
+      'tostring','tonumber','select','rawget','rawset','rawequal','rawlen',
+      'setmetatable','getmetatable','ipairs','pairs','next','unpack',
+      'table','string','math','coroutine','os','io','debug','bit32',
+      'task','game','workspace','script','Instance','Vector3','Vector2',
+      'CFrame','Color3','UDim2','UDim','Enum','BrickColor','Ray',
+      'NumberRange','NumberSequence','ColorSequence','TweenInfo',
+      'spawn','wait','delay','tick','time','loadstring','getfenv','setfenv',
+      'assert','collectgarbage'
+    ]);
+    const bools = new Set(['true','false','nil','self']);
+
+    function esc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    let result = '';
+    let i = 0;
+    const len = code.length;
+
+    while (i < len) {
+      if (code[i] === '-' && code[i+1] === '-' && code[i+2] === '[' && code[i+3] === '[') {
+        let end = code.indexOf(']]', i + 4);
+        if (end === -1) end = len;
+        else end += 2;
+        result += '<span class="lua-comment">' + esc(code.slice(i, end)) + '</span>';
+        i = end;
+        continue;
+      }
+
+      if (code[i] === '-' && code[i+1] === '-') {
+        let end = code.indexOf('\n', i);
+        if (end === -1) end = len;
+        result += '<span class="lua-comment">' + esc(code.slice(i, end)) + '</span>';
+        i = end;
+        continue;
+      }
+
+      if (code[i] === '[' && code[i+1] === '[') {
+        let end = code.indexOf(']]', i + 2);
+        if (end === -1) end = len;
+        else end += 2;
+        result += '<span class="lua-string">' + esc(code.slice(i, end)) + '</span>';
+        i = end;
+        continue;
+      }
+
+      if (code[i] === '"' || code[i] === "'") {
+        const q = code[i];
+        let j = i + 1;
+        while (j < len && code[j] !== q) {
+          if (code[j] === '\\') j++;
+          j++;
+        }
+        j++;
+        result += '<span class="lua-string">' + esc(code.slice(i, j)) + '</span>';
+        i = j;
+        continue;
+      }
+
+      if (/[0-9]/.test(code[i]) || (code[i] === '.' && i + 1 < len && /[0-9]/.test(code[i+1]))) {
+        let j = i;
+        if (code[j] === '0' && (code[j+1] === 'x' || code[j+1] === 'X')) {
+          j += 2;
+          while (j < len && /[0-9a-fA-F_]/.test(code[j])) j++;
+        } else {
+          while (j < len && /[0-9._eE+\-]/.test(code[j])) j++;
+        }
+        result += '<span class="lua-number">' + esc(code.slice(i, j)) + '</span>';
+        i = j;
+        continue;
+      }
+
+      if (/[a-zA-Z_]/.test(code[i])) {
+        let j = i;
+        while (j < len && /[a-zA-Z0-9_]/.test(code[j])) j++;
+        const word = code.slice(i, j);
+
+        if (keywords.has(word)) {
+          if (word === 'function') {
+            result += '<span class="lua-func">' + esc(word) + '</span>';
+          } else {
+            result += '<span class="lua-keyword">' + esc(word) + '</span>';
+          }
+        } else if (bools.has(word)) {
+          result += '<span class="lua-bool">' + esc(word) + '</span>';
+        } else if (builtins.has(word)) {
+          result += '<span class="lua-builtin">' + esc(word) + '</span>';
+        } else if (j < len && code[j] === '(') {
+          result += '<span class="lua-builtin">' + esc(word) + '</span>';
+        } else if (i > 0 && code[i-1] === '.') {
+          result += '<span class="lua-field">' + esc(word) + '</span>';
+        } else {
+          result += esc(word);
+        }
+        i = j;
+        continue;
+      }
+
+      if ('+-*/%^#=~<>:'.indexOf(code[i]) !== -1) {
+        result += '<span class="lua-op">' + esc(code[i]) + '</span>';
+        i++;
+        continue;
+      }
+
+      result += esc(code[i]);
+      i++;
+    }
+
+    return result;
+  }
+
+  let _rawCode = '';
+  let _foldRegions = [];
+  let _collapsed = new Set();
+
+  function findFoldRegions(code) {
+    const lines = code.split('\n');
+    const regions = [];
+    const stack = [];
+    const openers = /^\s*(local\s+\w+\s*=\s*\{|\w+\s*=\s*\{|\{)\s*$/;
+    const tableField = /^\s*\w+\s*=\s*\{\s*$/;
+    const blockStart = /\b(function|if|for|while|repeat|do)\b/;
+    const blockEnd = /^\s*(end[,;]?|\}[,;]?)\s*$/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (openers.test(trimmed) || tableField.test(trimmed)) {
+        stack.push({ type: '{', line: i });
+      } else if (blockStart.test(trimmed) && !trimmed.includes('end') && !/=\s*function.*\).*end/.test(trimmed)) {
+        if (/\bfunction\b/.test(trimmed) && /\bend\b/.test(trimmed)) continue;
+        if (/\bif\b/.test(trimmed) && /\bthen\b/.test(trimmed) && /\bend\b/.test(trimmed)) continue;
+        stack.push({ type: 'block', line: i });
+      }
+
+      if (trimmed === '}' || trimmed === '},' || trimmed === '};') {
+        for (let s = stack.length - 1; s >= 0; s--) {
+          if (stack[s].type === '{') {
+            const start = stack[s].line;
+            stack.splice(s, 1);
+            if (i - start >= 2) regions.push({ start, end: i });
+            break;
+          }
+        }
+      } else if (trimmed === 'end' || trimmed === 'end)' || trimmed === 'end,' || trimmed === 'end;') {
+        for (let s = stack.length - 1; s >= 0; s--) {
+          if (stack[s].type === 'block') {
+            const start = stack[s].line;
+            stack.splice(s, 1);
+            if (i - start >= 2) regions.push({ start, end: i });
+            break;
+          }
+        }
+      }
+    }
+    return regions;
+  }
+
+  function toggleFold(startLine) {
+    if (_collapsed.has(startLine)) {
+      _collapsed.delete(startLine);
+    } else {
+      _collapsed.add(startLine);
+    }
+    renderWithFolds();
+  }
+
+  function renderWithFolds() {
+    const code = _rawCode;
+    const lines = code.split('\n');
+    const hiddenLines = new Set();
+
+    for (const idx of _collapsed) {
+      const region = _foldRegions.find(r => r.start === idx);
+      if (region) {
+        for (let i = region.start + 1; i <= region.end; i++) {
+          hiddenLines.add(i);
+        }
+      }
+    }
+
+    const codeBody = document.getElementById('codeBody');
+    const codeLines = document.getElementById('codeLines');
+
+    const foldStarts = new Set(_foldRegions.map(r => r.start));
+    let lineNums = '';
+    let bodyHtml = '';
+    const highlighted = highlightLua(code).split('\n');
+
+    for (let i = 0; i < lines.length; i++) {
+      if (hiddenLines.has(i)) continue;
+
+      const isCollapsed = _collapsed.has(i);
+      const isFoldable = foldStarts.has(i);
+      const arrow = isCollapsed ? '&#9654;' : '&#9660;';
+
+      lineNums += '<span>' + (i + 1) + (isFoldable ? ' <span class="code-fold-btn" onclick="toggleFold(' + i + ')">' + arrow + '</span>' : '') + '</span>';
+
+      bodyHtml += highlighted[i];
+      if (isCollapsed) {
+        const region = _foldRegions.find(r => r.start === i);
+        const hiddenCount = region ? region.end - region.start : 0;
+        bodyHtml += ' <span class="code-fold-placeholder" onclick="toggleFold(' + i + ')">… ' + hiddenCount + ' lines</span>';
+      }
+      bodyHtml += '\n';
+    }
+
+    codeLines.innerHTML = lineNums;
+    codeBody.innerHTML = bodyHtml;
+  }
+
+  function renderScript(code) {
+    const placeholder = document.getElementById('codePlaceholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    _rawCode = code;
+    _foldRegions = findFoldRegions(code);
+    _collapsed = new Set();
+    renderWithFolds();
+  }
+
+  function showToast(message, type) {
+    const c = document.getElementById('toastContainer');
+    if (!c) return;
+    const el = document.createElement('div');
+    const color = type === 'error' ? 'text-red-400/70' : 'text-emerald-400/70';
+    el.className = 'bg-[#0a0a0a] border border-white/[0.06] ' + color + ' px-4 py-2 rounded-md text-[11px]';
+    el.style.minWidth = '200px';
+    el.innerText = message;
+    c.appendChild(el);
+    setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .2s'; setTimeout(function() { el.remove(); }, 250); }, 3000);
+  }
+
+  async function loadScript() {
+    try {
+      const res = await fetch('/panel/qjx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ a: GUILD_ID, b: SCRIPT_ID })
+      });
+      const data = await res.json();
+      if (data.success) {
+        renderScript(data.luaCode);
+      } else {
+        const ph = document.getElementById('codePlaceholder');
+        if (ph) ph.textContent = data.error || 'No script available';
+      }
+    } catch (err) {
+      const ph = document.getElementById('codePlaceholder');
+      if (ph) ph.textContent = 'Failed to load script';
+    }
+  }
+
+  function copyScript() {
+    const codeBody = document.getElementById('codeBody');
+    const text = codeBody.innerText || codeBody.textContent;
+    if (!text || text.includes('Loading script')) return showToast('No script loaded.', 'error');
+    navigator.clipboard.writeText(text).then(function() { showToast('Copied.', 'success'); }).catch(function() { showToast('Failed to copy.', 'error'); });
+  }
+
+  async function resetHWID() {
+    const btn = document.getElementById('resetHwidBtn');
+    if (btn.disabled) return;
+    try {
+      const res = await fetch('/panel/qix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ a: GUILD_ID, b: SCRIPT_ID })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('HWID reset.', 'success');
+      } else {
+        showToast(data.error || 'Failed.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error.', 'error');
+    }
+  }
+
+  function getFreemiumKey() {
+    showToast('Redirecting to Discord...', 'success');
+    window.open('/discord', '_blank');
+  }
+
+  <% if (userEntry) { %>
+  document.addEventListener('DOMContentLoaded', loadScript);
+  <% } else { %>
+  (function() {
+    const ph = document.getElementById('codePlaceholder');
+    if (ph) ph.textContent = 'Nothing to see here!';
+  })();
+  <% } %>
+</script>

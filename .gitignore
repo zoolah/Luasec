@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+config.yml
+config.*.yml
+!config.example.yml
+tunnel.bat
+cloudflared.exe
+logs.txt
+*.log
+package-lock.json
+node_modules
+temp/
+cache/
+*.local
+run_tunnel.bat

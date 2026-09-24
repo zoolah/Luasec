@@ -1,0 +1,42 @@
+{
+  "dependencies": {
+    "axios": "^1.11.0",
+    "base85": "^3.2.0",
+    "chart.js": "^4.5.0",
+    "connect-mongo": "^5.1.0",
+    "connect-redis": "^9.0.0",
+    "cors": "^2.8.5",
+    "discord.js": "^14.18.0",
+    "dotenv": "^17.3.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "luaparse": "^0.3.1",
+    "marked": "^16.3.0",
+    "mongodb": "^6.8.0",
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "ua-parser-js": "^2.0.4",
+    "uuid": "^11.1.0",
+    "ws": "^8.17.0"
+  },
+  "name": "projectname",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "NODE_ENV=production node main.js",
+    "startwin": "cross-env NODE_ENV=production node main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}

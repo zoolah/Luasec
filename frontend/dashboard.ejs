@@ -1,0 +1,90 @@
+<%- include('partials/layout', { 
+  title: 'Dashboard', 
+  user, 
+  routes,
+  body: `
+
+  <div class="mb-10">
+    <div class="flex items-baseline justify-between">
+      <div>
+        <h1 class="text-[28px] font-semibold tracking-[-0.03em] text-white">Dashboard</h1>
+        <p class="text-[14px] text-white/40 mt-1">Your scripts and server operations at a glance</p>
+      </div>
+    </div>
+  </div>
+
+  ${user.id === '1469053280414863501' ? `
+  <a href="${routes.admin}" class="mb-6 flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.015] p-4 hover:bg-white/[0.03] hover:border-white/[0.1] transition-all group">
+    <div class="h-8 w-8 rounded-md bg-white/[0.04] flex items-center justify-center text-white/30 group-hover:text-white/50 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </div>
+    <div class="min-w-0 flex-1">
+      <h3 class="text-[13px] font-medium text-white/70">Admin Panel</h3>
+      <p class="text-[10px] text-white/25">Users and blacklists</p>
+    </div>
+    <span class="text-[11px] text-white/20 group-hover:text-white/40 transition">&rarr;</span>
+  </a>
+  ` : ''}
+
+  ${approved ? `
+  <div class="mb-4">
+    <h2 class="text-[15px] font-medium text-white/70">Servers you manage</h2>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    ${ownedGuilds.length === 0 ? `
+      <div class='col-span-full text-center py-14 rounded-lg border border-white/[0.04] bg-white/[0.015]'>
+        <p class='text-[12px] text-white/25'>No servers found. You need Administrator permissions on a Discord server.</p>
+        <a href="/discord" class="inline-block mt-3 text-[11px] text-white/40 hover:text-white/60">Join our Discord →</a>
+      </div>
+    ` : ''}
+    ${ownedGuilds.map(guild => `
+      <a href="${routes.manage(guild.id)}" class="group block rounded-2xl border border-white/[0.06] bg-white/[0.012] p-6 hover:bg-white/[0.025] hover:border-white/[0.1] transition-all">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-[15px] font-medium text-white/90 tracking-tight">${guild.name}</div>
+            <div class="text-[11px] font-mono text-white/20 mt-0.5">${guild.id}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-white/30">Scripts</div>
+            <div class="text-[17px] font-semibold text-white/80 tabular-nums">${typeof guild.scriptCount === 'number' ? guild.scriptCount : '0'}</div>
+          </div>
+        </div>
+        <div class="text-[12px] text-white/35 group-hover:text-white/55 transition flex items-center gap-1">
+          Open management <span class="transition group-hover:translate-x-0.5">→</span>
+        </div>
+      </a>
+    `).join('')}
+  </div>
+  ` : ''}
+
+  <div class="${approved ? 'mt-14' : ''} mb-8">
+    <h2 class="text-[15px] font-medium text-white/70">Your Scripts</h2>
+    <p class="text-[12px] text-white/25 mt-1">Scripts you have access to</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    ${userScripts.length === 0 ? `
+      <div class='col-span-full text-center py-14 rounded-lg border border-white/[0.04] bg-white/[0.015]'>
+        <p class='text-[12px] text-white/25'>No scripts yet. You haven't been given access to any scripts yet.</p>
+        <a href="/discord" class="inline-block mt-3 text-[11px] text-white/40 hover:text-white/60">Contact a server admin or redeem a key →</a>
+      </div>
+    ` : ''}
+    ${userScripts.map(s => `
+      <a href="${routes.panel(s.guildId, s.scriptId)}" class="group block rounded-2xl border border-white/[0.06] bg-white/[0.012] p-6 hover:bg-white/[0.025] hover:border-white/[0.1] transition-all">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-[15px] font-medium text-white/90 tracking-tight">${s.scriptName}</div>
+            <div class="text-[11px] font-mono text-white/20 mt-0.5">${s.guildName}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] ${s.expired ? 'text-red-400/70' : 'text-emerald-400/70'} font-medium">${s.expired ? 'EXPIRED' : 'ACTIVE'}</div>
+          </div>
+        </div>
+        <div class="text-[12px] text-white/35 group-hover:text-white/55 transition flex items-center gap-1">
+          Open panel <span class="transition group-hover:translate-x-0.5">→</span>
+        </div>
+      </a>
+    `).join('')}
+  </div>
+
+  ` 
+}) %>

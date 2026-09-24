@@ -1,0 +1,6 @@
+<%- include('partials/layout', { 
+  title: `Manage ${guild.name}`, 
+  user, 
+  routes,
+  body: include('partials/manage-body', { guild, scripts, routes }) 
+}) %>

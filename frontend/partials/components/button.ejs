@@ -1,0 +1,35 @@
+<%#
+  Reusable Button Component (Phase 0)
+  Usage:
+    <%- include('partials/components/button', {
+      variant: 'primary' | 'danger' | 'ghost',
+      size: 'sm' | 'md',
+      href: '/path',
+      onclick: 'doSomething()',
+      icon: '...' // optional svg string
+    }) { %>Label<% } %>
+#%>
+<%
+  const variant = locals.variant || 'default';
+  const size = locals.size || 'md';
+  let classes = 'btn';
+
+  if (variant === 'primary') classes += ' btn-primary';
+  if (variant === 'danger') classes += ' btn-danger';
+  if (variant === 'ghost') classes += ' btn-ghost';
+
+  if (size === 'sm') classes += ' text-[11px] px-3 py-1';
+  if (size === 'md') classes += ' text-[12.5px] px-4 py-1.5';
+%>
+
+<% if (locals.href) { %>
+  <a href="<%= href %>" class="<%= classes %>" <% if (locals.onclick) { %>onclick="<%= onclick %>"<% } %>>
+    <% if (locals.icon) { %><%- icon %><% } %>
+    <%= body || '' %>
+  </a>
+<% } else { %>
+  <button type="button" class="<%= classes %>" <% if (locals.onclick) { %>onclick="<%= onclick %>"<% } %>>
+    <% if (locals.icon) { %><%- icon %><% } %>
+    <%= body || '' %>
+  </button>
+<% } %>

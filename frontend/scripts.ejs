@@ -1,0 +1,34 @@
+<%- include('partials/layout', { 
+  title: 'Your Scripts', 
+  user, 
+  body: `
+
+  <div class="mb-8">
+    <h1 class="text-xl font-medium text-white/90 tracking-tight">Your Scripts</h1>
+    <p class="text-[12px] text-white/25 mt-1">Scripts you have access to</p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+    ${userScripts.length === 0 ? `
+      <div class='col-span-full text-center py-14 rounded-lg border border-white/[0.04] bg-white/[0.015]'>
+        <p class='text-[12px] text-white/25'>Nothing here yet.</p>
+      </div>
+    ` : ''}
+    ${userScripts.map(s => `
+      <a href="/panel/${s.guildId}/${s.scriptId}" class="group rounded-lg border border-white/[0.06] bg-white/[0.015] p-5 flex flex-col hover:bg-white/[0.03] hover:border-white/[0.1] transition-all cursor-pointer">
+        <div class="flex items-start justify-between mb-3">
+          <div class="min-w-0">
+            <h3 class="text-[13px] font-medium text-white/80 truncate">${s.scriptName}</h3>
+            <p class="text-[10px] font-mono text-white/15 mt-1">${s.guildName}</p>
+          </div>
+          <span class="text-[10px] font-medium shrink-0 ml-3 ${s.expired ? 'text-red-400/60' : 'text-emerald-400/60'}">${s.expired ? 'Expired' : 'Active'}</span>
+        </div>
+        <div class="mt-auto flex justify-end">
+          <span class="text-[11px] text-white/20 group-hover:text-white/40 transition">Open &rarr;</span>
+        </div>
+      </a>
+    `).join('')}
+  </div>
+
+  ` 
+}) %>

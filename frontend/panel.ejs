@@ -1,0 +1,6 @@
+<%- include('partials/layout', { 
+  title: scriptName + ' — Panel', 
+  user, 
+  routes,
+  body: include('partials/panel-body', { user, guildId, guildName, guildIcon, scriptId, scriptName, freemium, userEntry, expired, encodedLoader, routes }) 
+}) %>

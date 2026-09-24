@@ -1,0 +1,557 @@
+<%
+function renderUserRow(u) {
+  return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded bg-white/[0.02] border border-white/[0.04] group" id="user-' + u.discordId + '">'
+    + '<div class="min-w-0">'
+    + '<span class="text-[12px] text-white/60 truncate block">' + (u.discordUsername || u.discordId) + '</span>'
+    + '<span class="text-[10px] font-mono text-white/15">' + u.discordId + '</span>'
+    + '</div>'
+    + '<button onclick="revokeUser(\'' + u.discordId + '\')" class="text-[10px] text-red-400/40 hover:text-red-400/80 transition shrink-0 ml-2">Revoke</button>'
+    + '</div>';
+}
+function renderIPRow(ip) {
+  return '<div class="flex items-center justify-between py-1 px-2.5 rounded bg-white/[0.02] border border-white/[0.04]" id="ip-' + ip.replace(/\./g, '_') + '">'
+    + '<span class="text-[11px] font-mono text-white/50">' + ip + '</span>'
+    + '<button onclick="removeIP(\'' + ip + '\')" class="text-[10px] text-red-400/40 hover:text-red-400/80 transition">Remove</button>'
+    + '</div>';
+}
+function renderHWIDRow(h) {
+  return '<div class="flex items-center justify-between py-1 px-2.5 rounded bg-white/[0.02] border border-white/[0.04]" id="hwid-' + h + '">'
+    + '<span class="text-[11px] font-mono text-white/50 truncate max-w-[180px]">' + h + '</span>'
+    + '<button onclick="removeHWID(\'' + h + '\')" class="text-[10px] text-red-400/40 hover:text-red-400/80 transition shrink-0 ml-2">Remove</button>'
+    + '</div>';
+}
+var userRows = approvedUsers.length === 0 ? '<p class="text-[11px] text-white/20">No approved users</p>' : approvedUsers.map(renderUserRow).join('');
+var ipRows = blacklist.ips.length === 0 ? '<p class="text-[11px] text-white/20">No IPs blacklisted</p>' : blacklist.ips.map(renderIPRow).join('');
+var hwidRows = blacklist.hwids.length === 0 ? '<p class="text-[11px] text-white/20">No HWIDs blacklisted</p>' : blacklist.hwids.map(renderHWIDRow).join('');
+%>
+<%- include('partials/layout', { 
+  title: 'Admin', 
+  user, 
+  routes,
+  body: `
+
+  <div class="mb-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-[28px] font-semibold tracking-[-0.03em] text-white">Administration</h1>
+        <p class="text-[14px] text-white/45 mt-1">Manage platform access and global security posture</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-[1400px] mx-auto">
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <div class="text-sm font-semibold tracking-widest text-white/40">ACCESS CONTROL</div>
+          <div class="text-2xl font-semibold tracking-tight text-white mt-1">Approved Users</div>
+          <div class="text-white/50 text-sm mt-1">Users who can access the Luasec platform and manage scripts.</div>
+        </div>
+        <div class="flex gap-3">
+          <input id="grantInput" type="text" placeholder="Discord ID" class="w-64 bg-[#0a0a0a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white/80 placeholder-white/40 outline-none focus:border-white/[0.2] transition" />
+          <button onclick="grantUser()" class="btn btn-primary px-6">Grant Access</button>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div id="userList" class="divide-y divide-white/[0.04]">
+          ${userRows}
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="mb-6">
+        <div class="text-sm font-semibold tracking-widest text-white/40">SECURITY</div>
+        <div class="text-2xl font-semibold tracking-tight text-white mt-1">Global Blacklist</div>
+        <div class="text-white/50 text-sm mt-1">Entries here are blocked across all scripts and servers.</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="font-semibold text-lg text-white">IP Addresses</div>
+          </div>
+          <div class="flex gap-3 mb-4">
+            <input id="ipInput" type="text" placeholder="e.g. 192.168.1.1" class="flex-1 bg-[#0a0a0a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm font-mono text-white/80 placeholder-white/40 outline-none focus:border-white/[0.2]" />
+            <button onclick="addIP()" class="btn px-6">Block IP</button>
+          </div>
+          <div class="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl p-1">
+            <div id="ipList" class="divide-y divide-white/[0.04] text-sm max-h-[320px] overflow-auto">
+              ${ipRows}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="font-semibold text-lg text-white">Hardware IDs</div>
+          </div>
+          <div class="flex gap-3 mb-4">
+            <input id="hwidInput" type="text" placeholder="Hardware fingerprint" class="flex-1 bg-[#0a0a0a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm font-mono text-white/80 placeholder-white/40 outline-none focus:border-white/[0.2]" />
+            <button onclick="addHWID()" class="btn px-6">Block HWID</button>
+          </div>
+          <div class="bg-[#0a0a0a] border border-white/[0.06] rounded-2xl p-1">
+            <div id="hwidList" class="divide-y divide-white/[0.04] text-sm max-h-[320px] overflow-auto">
+              ${hwidRows}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="mt-6 rounded-lg border border-white/[0.06] bg-white/[0.015] overflow-hidden" style="height: 420px; max-height: 60vh; display: flex; flex-direction: column;">
+    <div class="flex items-center justify-between px-5 py-3 border-b border-white/[0.04] shrink-0">
+      <div class="flex items-center gap-3">
+        <h2 class="text-[13px] font-medium text-white/70">Live Logs</h2>
+        <span id="logStatus" class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/60 uppercase tracking-wider">Connected</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="clearLogs()" class="text-[10px] text-white/25 hover:text-white/50 transition">Clear</button>
+      </div>
+    </div>
+
+    <div id="logTabs" class="flex items-center gap-0 px-3 py-1.5 border-b border-white/[0.04] shrink-0 overflow-x-auto" style="scrollbar-width:none;">
+      <button class="log-tab active" data-tab="all" onclick="switchTab('all')">
+        <span class="tab-label">All</span>
+        <span class="tab-count" id="count-all">0</span>
+      </button>
+    </div>
+
+    <div id="logContainer" class="flex-1 overflow-y-auto font-mono text-[11px] leading-[1.7]" style="scrollbar-width:thin; scrollbar-color: rgba(255,255,255,0.06) transparent;">
+      <div id="logEntries" class="px-4 py-2"></div>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded-lg border border-white/[0.06] bg-white/[0.015] overflow-hidden" style="height: 380px; max-height: 60vh; display: flex; flex-direction: column;">
+    <div class="flex items-center justify-between px-5 py-3 border-b border-white/[0.04] shrink-0">
+      <div class="flex items-center gap-3">
+        <h2 class="text-[13px] font-medium text-white/70">Page Visits</h2>
+        <span id="pvStatus" class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/60 uppercase tracking-wider">Connected</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="clearPV()" class="text-[10px] text-white/25 hover:text-white/50 transition">Clear</button>
+      </div>
+    </div>
+
+    <div id="pvTabs" class="flex items-center gap-0 px-3 py-1.5 border-b border-white/[0.04] shrink-0 overflow-x-auto" style="scrollbar-width:none;">
+      <button class="pv-tab active" data-pvtab="all" onclick="switchPVTab('all')">
+        <span class="tab-label">All</span>
+        <span class="tab-count" id="pvcount-all">0</span>
+      </button>
+    </div>
+
+    <div id="pvContainer" class="flex-1 overflow-y-auto font-mono text-[11px] leading-[1.7]" style="scrollbar-width:thin; scrollbar-color: rgba(255,255,255,0.06) transparent;">
+      <div id="pvEntries" class="px-4 py-2"></div>
+    </div>
+  </div>
+
+  <style>
+    .pv-tab {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; color: rgba(255,255,255,0.3);
+      background: transparent; border: none; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .pv-tab:hover { color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.03); }
+    .pv-tab.active { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); }
+    .pv-tab .tab-count { font-size: 9px; padding: 0 5px; border-radius: 8px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.25); min-width: 16px; text-align: center; }
+    .pv-tab.active .tab-count { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+    .pv-line { padding: 1px 0; display: flex; gap: 8px; }
+    .pv-line:hover { background: rgba(255,255,255,0.02); }
+    .pv-time { color: rgba(255,255,255,0.2); min-width: 58px; }
+    .pv-page { font-weight: 600; min-width: 72px; }
+    .pv-page-home { color: #60a5fa; }
+    .pv-page-dashboard { color: #a78bfa; }
+    .pv-page-scripts { color: #34d399; }
+    .pv-page-manage { color: #f97316; }
+    .pv-page-panel { color: #fbbf24; }
+    .pv-page-payment { color: #f87171; }
+    .pv-page-admin { color: #e879f9; }
+    .pv-page-other { color: rgba(255,255,255,0.4); }
+    .pv-user { color: rgba(255,255,255,0.55); min-width: 100px; }
+    .pv-ip { color: rgba(255,255,255,0.25); min-width: 110px; }
+    .pv-path { color: rgba(255,255,255,0.2); }
+    @media (max-width: 640px) {
+      .pv-line { flex-wrap: wrap; gap: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+      .pv-time, .pv-page, .pv-user, .pv-ip, .pv-path { min-width: auto; font-size: 10px; }
+      .pv-path { display: none; }
+    }
+  </style>
+
+  <style>
+    .log-tab {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; color: rgba(255,255,255,0.3);
+      background: transparent; border: none; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .log-tab:hover { color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.03); }
+    .log-tab.active { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); }
+    .tab-count {
+      font-size: 9px; padding: 0 5px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.25);
+      min-width: 16px; text-align: center;
+    }
+    .log-tab.active .tab-count { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+    .log-line { padding: 1px 0; display: flex; gap: 8px; }
+    .log-line:hover { background: rgba(255,255,255,0.02); }
+    .log-time { color: rgba(255,255,255,0.2); min-width: 58px; }
+    .log-icon-ok { color: #34d399; }
+    .log-icon-fail { color: #f87171; }
+    .log-icon-block { color: #f97316; }
+    .log-icon-info { color: rgba(255,255,255,0.3); }
+    .log-stage { min-width: 72px; font-weight: 600; }
+    .log-stage-loader { color: #60a5fa; }
+    .log-stage-script { color: #a78bfa; }
+    .log-stage-validate { color: #34d399; }
+    .log-stage-other { color: rgba(255,255,255,0.4); }
+    .log-user { color: rgba(255,255,255,0.55); min-width: 100px; }
+    .log-details { color: rgba(255,255,255,0.3); }
+    @media (max-width: 640px) {
+      .log-line { flex-wrap: wrap; gap: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+      .log-time, .log-stage, .log-user, .log-details { min-width: auto; font-size: 10px; }
+      .log-details { width: 100%; }
+    }
+  </style>
+
+  <div id="toast" class="fixed bottom-6 right-6 px-4 py-2 rounded-lg text-[12px] transition-all duration-300 opacity-0 pointer-events-none z-50"></div>
+
+  <script>
+    function toast(msg, ok) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'fixed bottom-6 right-6 px-4 py-2 rounded-lg text-[12px] transition-all duration-300 z-50 ' + (ok ? 'bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20' : 'bg-red-500/10 text-red-400/80 border border-red-500/20');
+      t.style.opacity = '1';
+      setTimeout(function() { t.style.opacity = '0'; }, 2500);
+    }
+
+    async function post(url, body) {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      return r.json();
+    }
+
+    async function grantUser() {
+      const id = document.getElementById('grantInput').value.trim();
+      if (!id) return;
+      const r = await post('/admin/q9x', { p: id });
+      if (r.success) { toast('User granted', true); setTimeout(function() { location.reload(); }, 600); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    async function revokeUser(id) {
+      const r = await post('/admin/qax', { p: id });
+      if (r.success) { toast('User revoked', true); var el = document.getElementById('user-' + id); if (el) el.remove(); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    async function addIP() {
+      const ip = document.getElementById('ipInput').value.trim();
+      if (!ip) return;
+      const r = await post('/admin/qbx', { q: ip });
+      if (r.success) { toast('IP blacklisted', true); setTimeout(function() { location.reload(); }, 600); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    async function removeIP(ip) {
+      const r = await post('/admin/qdx', { q: ip });
+      if (r.success) { toast('IP removed', true); var el = document.getElementById('ip-' + ip.replace(/[.]/g, '_')); if (el) el.remove(); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    async function addHWID() {
+      const hwid = document.getElementById('hwidInput').value.trim();
+      if (!hwid) return;
+      const r = await post('/admin/qcx', { r: hwid });
+      if (r.success) { toast('HWID blacklisted', true); setTimeout(function() { location.reload(); }, 600); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    async function removeHWID(hwid) {
+      const r = await post('/admin/qex', { r: hwid });
+      if (r.success) { toast('HWID removed', true); var el = document.getElementById('hwid-' + hwid); if (el) el.remove(); }
+      else toast(r.error || 'Failed', false);
+    }
+
+    const logEntries = document.getElementById('logEntries');
+    const logContainer = document.getElementById('logContainer');
+    const logStatus = document.getElementById('logStatus');
+    const allLogs = [];
+    const userLogs = {};
+    const userCounts = {};
+    let activeTab = 'all';
+    let autoScroll = true;
+    const MAX_LOGS = 500;
+
+    logContainer.addEventListener('scroll', function() {
+      const atBottom = logContainer.scrollHeight - logContainer.scrollTop - logContainer.clientHeight < 40;
+      autoScroll = atBottom;
+    });
+
+    function getIconClass(icon) {
+      if (icon === '✓') return 'log-icon-ok';
+      if (icon === '✗') return 'log-icon-fail';
+      if (icon === '⛔') return 'log-icon-block';
+      return 'log-icon-info';
+    }
+
+    function getStageClass(stage) {
+      const s = stage.trim().toUpperCase();
+      if (s === 'LOADER') return 'log-stage-loader';
+      if (s === 'SCRIPT') return 'log-stage-script';
+      if (s === 'VALIDATE') return 'log-stage-validate';
+      return 'log-stage-other';
+    }
+
+    function getUserKey(entry) {
+      const u = (entry.user || '').trim();
+      if (!u || u === 'BLACKLISTED' || u === 'DECRYPT_ERROR' || u === 'BROWSER_DETECTED' ||
+          u === 'INVALID_CREDS' || u === 'INVALID_TOKEN' || u === 'TOKEN_MISMATCH' ||
+          u === 'NOT_FOUND' || u === 'INVALID_KEY' || u === 'CODE_MISSING' ||
+          u === 'ERROR' || u === 'BLACKLISTED_START' || u === 'BROWSER' || u === 'BYPASS') {
+        return null;
+      }
+      return u;
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function createLogLine(entry) {
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.setAttribute('data-user', getUserKey(entry) || '__none__');
+
+      const scriptDisplay = entry.scriptId || '';
+      const detailsStr = entry.details ? ' • ' + entry.details : '';
+
+      div.innerHTML =
+        '<span class="log-time">' + esc(entry.time) + '</span>' +
+        '<span class="' + getIconClass(entry.icon) + '">' + esc(entry.icon) + '</span>' +
+        '<span class="log-stage ' + getStageClass(entry.stage) + '">' + esc(entry.stage) + '</span>' +
+        '<span class="log-user">' + esc(entry.user) + '</span>' +
+        '<span class="log-details">' + esc(scriptDisplay + detailsStr) + '</span>';
+
+      return div;
+    }
+
+    function ensureTab(userKey) {
+      if (!userKey || document.querySelector('.log-tab[data-tab="' + CSS.escape(userKey) + '"]')) return;
+
+      const tabsContainer = document.getElementById('logTabs');
+      const btn = document.createElement('button');
+      btn.className = 'log-tab';
+      btn.setAttribute('data-tab', userKey);
+      btn.onclick = function() { switchTab(userKey); };
+      btn.innerHTML = '<span class="tab-label">' + esc(userKey) + '</span><span class="tab-count" id="count-' + CSS.escape(userKey) + '">0</span>';
+      tabsContainer.appendChild(btn);
+    }
+
+    function updateCount(userKey) {
+      const countAll = document.getElementById('count-all');
+      if (countAll) countAll.textContent = allLogs.length;
+
+      if (userKey) {
+        const c = document.getElementById('count-' + CSS.escape(userKey));
+        if (c) c.textContent = userCounts[userKey] || 0;
+      }
+    }
+
+    function addLog(entry) {
+      const el = createLogLine(entry);
+      const record = { entry, el };
+
+      allLogs.push(record);
+      if (allLogs.length > MAX_LOGS) {
+        const removed = allLogs.shift();
+        if (removed.el.parentNode) removed.el.remove();
+      }
+
+      const userKey = getUserKey(entry);
+      if (userKey) {
+        if (!userLogs[userKey]) userLogs[userKey] = [];
+        userLogs[userKey].push(record);
+        userCounts[userKey] = (userCounts[userKey] || 0) + 1;
+        ensureTab(userKey);
+        updateCount(userKey);
+      }
+      updateCount(null);
+
+      if (activeTab === 'all' || (userKey && activeTab === userKey)) {
+        logEntries.appendChild(el);
+        if (autoScroll) {
+          logContainer.scrollTop = logContainer.scrollHeight;
+        }
+      }
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.log-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+      });
+
+      logEntries.innerHTML = '';
+      const list = tab === 'all' ? allLogs : (userLogs[tab] || []);
+      list.forEach(function(record) {
+        logEntries.appendChild(record.el);
+      });
+
+      autoScroll = true;
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function clearLogs() {
+      allLogs.length = 0;
+      for (const k in userLogs) { userLogs[k].length = 0; userCounts[k] = 0; }
+      logEntries.innerHTML = '';
+      document.querySelectorAll('.tab-count').forEach(function(c) { c.textContent = '0'; });
+    }
+
+    function connectLogs() {
+      const es = new EventSource('/admin/qfx');
+
+      es.onopen = function() {
+        logStatus.textContent = 'Connected';
+        logStatus.className = 'text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/60 uppercase tracking-wider';
+      };
+
+      es.onmessage = function(e) {
+        try {
+          const entry = JSON.parse(e.data);
+          addLog(entry);
+        } catch(err) {}
+      };
+
+      es.onerror = function() {
+        logStatus.textContent = 'Reconnecting';
+        logStatus.className = 'text-[9px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400/60 uppercase tracking-wider';
+        es.close();
+        setTimeout(connectLogs, 3000);
+      };
+    }
+
+    connectLogs();
+
+    var pvEntries = document.getElementById('pvEntries');
+    var pvContainer = document.getElementById('pvContainer');
+    var pvStatus = document.getElementById('pvStatus');
+    var pvAll = [];
+    var pvByPage = {};
+    var pvPageCounts = {};
+    var pvActiveTab = 'all';
+    var pvAutoScroll = true;
+    var PV_MAX = 500;
+
+    pvContainer.addEventListener('scroll', function() {
+      pvAutoScroll = pvContainer.scrollHeight - pvContainer.scrollTop - pvContainer.clientHeight < 40;
+    });
+
+    function pvPageClass(page) {
+      var p = page.toLowerCase();
+      if (p === 'home') return 'pv-page-home';
+      if (p === 'dashboard') return 'pv-page-dashboard';
+      if (p === 'scripts') return 'pv-page-scripts';
+      if (p === 'manage') return 'pv-page-manage';
+      if (p === 'panel') return 'pv-page-panel';
+      if (p === 'payment') return 'pv-page-payment';
+      if (p === 'admin') return 'pv-page-admin';
+      return 'pv-page-other';
+    }
+
+    function createPVLine(entry) {
+      var div = document.createElement('div');
+      div.className = 'pv-line';
+      div.setAttribute('data-pvpage', entry.page);
+      div.innerHTML =
+        '<span class="pv-time">' + esc(entry.time) + '</span>' +
+        '<span class="pv-page ' + pvPageClass(entry.page) + '">' + esc(entry.page) + '</span>' +
+        '<span class="pv-user">' + esc(entry.user || 'Guest') + '</span>' +
+        '<span class="pv-ip">' + esc(entry.ip) + '</span>' +
+        '<span class="pv-path">' + esc(entry.path) + '</span>';
+      return div;
+    }
+
+    function ensurePVTab(page) {
+      if (document.querySelector('.pv-tab[data-pvtab="' + CSS.escape(page) + '"]')) return;
+      var tabsC = document.getElementById('pvTabs');
+      var btn = document.createElement('button');
+      btn.className = 'pv-tab';
+      btn.setAttribute('data-pvtab', page);
+      btn.onclick = function() { switchPVTab(page); };
+      btn.innerHTML = '<span class="tab-label">' + esc(page) + '</span><span class="tab-count" id="pvcount-' + CSS.escape(page) + '">0</span>';
+      tabsC.appendChild(btn);
+    }
+
+    function addPV(entry) {
+      var el = createPVLine(entry);
+      var record = { entry: entry, el: el };
+      pvAll.push(record);
+      if (pvAll.length > PV_MAX) { var rm = pvAll.shift(); if (rm.el.parentNode) rm.el.remove(); }
+
+      var page = entry.page;
+      if (!pvByPage[page]) pvByPage[page] = [];
+      pvByPage[page].push(record);
+      pvPageCounts[page] = (pvPageCounts[page] || 0) + 1;
+      ensurePVTab(page);
+
+      var cAll = document.getElementById('pvcount-all');
+      if (cAll) cAll.textContent = pvAll.length;
+      var cPage = document.getElementById('pvcount-' + CSS.escape(page));
+      if (cPage) cPage.textContent = pvPageCounts[page] || 0;
+
+      if (pvActiveTab === 'all' || pvActiveTab === page) {
+        pvEntries.appendChild(el);
+        if (pvAutoScroll) pvContainer.scrollTop = pvContainer.scrollHeight;
+      }
+    }
+
+    function switchPVTab(tab) {
+      pvActiveTab = tab;
+      document.querySelectorAll('.pv-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-pvtab') === tab);
+      });
+      pvEntries.innerHTML = '';
+      var list = tab === 'all' ? pvAll : (pvByPage[tab] || []);
+      list.forEach(function(r) { pvEntries.appendChild(r.el); });
+      pvAutoScroll = true;
+      pvContainer.scrollTop = pvContainer.scrollHeight;
+    }
+
+    function clearPV() {
+      pvAll.length = 0;
+      for (var k in pvByPage) { pvByPage[k].length = 0; pvPageCounts[k] = 0; }
+      pvEntries.innerHTML = '';
+      document.querySelectorAll('.pv-tab .tab-count').forEach(function(c) { c.textContent = '0'; });
+    }
+
+    function connectPV() {
+      var es = new EventSource('/admin/qgx');
+      es.onopen = function() {
+        pvStatus.textContent = 'Connected';
+        pvStatus.className = 'text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/60 uppercase tracking-wider';
+      };
+      es.onmessage = function(e) {
+        try { addPV(JSON.parse(e.data)); } catch(err) {}
+      };
+      es.onerror = function() {
+        pvStatus.textContent = 'Reconnecting';
+        pvStatus.className = 'text-[9px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400/60 uppercase tracking-wider';
+        es.close();
+        setTimeout(connectPV, 3000);
+      };
+    }
+    connectPV();
+
+  </script>
+
+  ` 
+}) %>
