@@ -186,7 +186,6 @@ app.get('/healthz', (req, res) => {
 });
 
 
-
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
